@@ -1,0 +1,8 @@
+# YouTube Auto-Comment Bot 依赖
+# 安装: pip install -r requirements.txt
+
+# 浏览器自动化（核心）
+playwright>=1.40.0
+
+# 如果需要额外功能
+requests>=2.31.0
