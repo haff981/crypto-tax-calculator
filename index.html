@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crypto Tax Calculator — Meme Coin & Airdrop Tax Calculator</title>
+  <meta name="description" content="Free crypto tax calculator for meme coins, airdrops. Calculate capital gains tax, after-tax profit. Supports US, CA, AU tax rules." />
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #f7931a;
+      --green: #3fb950;
+      --red: #f85149;
+      --blue: #58a6ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
+    header nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      margin-left: 20px;
+    }
+    header nav a:hover { color: var(--text); }
+    .hero {
+      text-align: center;
+      padding: 60px 24px 40px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .hero h2 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #f7931a, #ffd700);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p { color: var(--muted); font-size: 15px; line-height: 1.6; }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin: 32px auto 0;
+      max-width: 500px;
+      background: var(--card);
+      border-radius: 10px;
+      padding: 4px;
+      border: 1px solid var(--border);
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      transition: all 0.2s;
+    }
+    .tab.active { background: var(--accent); color: #000; }
+    .tab:hover:not(.active) { color: var(--text); background: #1c2128; }
+    .calculator {
+      max-width: 520px;
+      margin: 32px auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+    }
+    .calc-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .field input, .field select {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+    .field select option { background: var(--card); }
+    .row { display: flex; gap: 12px; }
+    .row .field { flex: 1; }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 8px;
+    }
+    .btn:hover { opacity: 0.9; }
+    .result {
+      margin-top: 20px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      display: none;
+    }
+    .result.show { display: block; }
+    .result h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: var(--accent);
+    }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .result-row:last-child { border-bottom: none; }
+    .result-row .label { color: var(--muted); }
+    .result-row .value { font-weight: 700; }
+    .profit { color: var(--green); }
+    .loss { color: var(--red); }
+    .tax { color: var(--accent); }
+    .disclaimer {
+      max-width: 520px;
+      margin: 16px auto 60px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+      text-align: center;
+    }
+    .upgrade-cta {
+      max-width: 520px;
+      margin: 24px auto;
+      background: linear-gradient(135deg, #1a1200, #2a1f00);
+      border: 1px solid #f7931a44;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      display: none;
+    }
+    .upgrade-cta.show { display: block; }
+    .upgrade-cta h3 { color: var(--accent); font-size: 16px; margin-bottom: 8px; }
+    .upgrade-cta p { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+    .upgrade-cta .btn { background: var(--accent); color: #000; text-decoration: none; display: inline-block; width: auto; padding: 10px 28px; }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .price-display {
+      font-size: 11px;
+      color: var(--green);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🪙 CryptoTaxCalc</h1>
+  <nav>
+    <a href="#calculator">Calculator</a>
+    <a href="#pricing">Pricing</a>
+    <a href="https://github.com/haff981/crypto-tax-calculator" target="_blank">GitHub</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <h2>Crypto Tax Calculator</h2>
+  <p>Calculate your meme coin profits, capital gains tax, and after-tax returns. Free, fast, no sign-up required.</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('meme')">💎 Meme Coin</div>
+  <div class="tab" onclick="switchTab('airdrop')">🪂 Airdrop</div>
+  <div class="tab" onclick="switchTab('capital')">📊 Capital Gains</div>
+</div>
+
+<!-- Meme Coin Calculator -->
+<div class="calculator" id="meme-calc">
+  <div class="calc-title">Meme Coin Profit & Tax Calculator</div>
+  <div class="field">
+    <label>Coin / Token Name</label>
+    <input type="text" id="meme-coin" placeholder="e.g. PEPE, WIF, BONK" />
+  </div>
+  <div class="row">
+    <div class="field">
+      <label>Buy Price (USD)</label>
+      <input type="number" id="meme-buy" placeholder="0.000123" step="any" />
+    </div>
+    <div class="field">
+      <label>Sell Price (USD)</label>
+      <input type="number" id="meme-sell" placeholder="0.000456" step="any" />
+    </div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <label>Quantity / Tokens</label>
+      <input type="number" id="meme-qty" placeholder="1000000" step="any" />
+    </div>
+    <div class="field">
+      <label>Blockchain</label>
+      <select id="meme-chain">
+        <option value="solana">Solana (low fee)</option>
+        <option value="eth">Ethereum (ERC-20)</option>
+        <option value="base">Base</option>
+        <option value="bsc">BSC</option>
+        <option value="arb">Arbitrum</option>
+      </select>
+    </div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <label>Buy Date</label>
+      <input type="date" id="meme-buy-date" />
+    </div>
+    <div class="field">
+      <label>Sell Date</label>
+      <input type="date" id="meme-sell-date" />
+    </div>
+  </div>
+  <div class="field">
+    <label>US Tax Filing Status</label>
+    <select id="meme-status">
+      <option value="single">Single</option>
+      <option value="married_joint">Married Filing Jointly</option>
+      <option value="married_sep">Married Filing Separately</option>
+      <option value="head">Head of Household</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Estimated Annual Income (USD)</label>
+    <select id="meme-income">
+      <option value="0">$0 - $11,925 (0% LTCG)</option>
+      <option value="15000">$11,926 - $48,475 (15% LTCG)</option>
+      <option value="50000">$48,476 - $266,700 (15% LTCG)</option>
+      <option value="300000">$266,701+ (20% LTCG)</option>
+    </select>
+  </div>
+  <button class="btn" onclick="calcMeme()">Calculate Tax & Profit</button>
+  <div class="result" id="meme-result"></div>
+</div>
+
+<!-- Airdrop Calculator -->
+<div class="calculator" id="airdrop-calc" style="display:none;">
+  <div class="calc-title">Airdrop Tax Calculator</div>
+  <div class="field">
+    <label>Project / Airdrop Name</label>
+    <input type="text" id="air-coin" placeholder="e.g. UNI, ENS, Arbitrum" />
+  </div>
+  <div class="row">
+    <div class="field">
+      <label>Tokens Received</label>
+      <input type="number" id="air-qty" placeholder="1000" step="any" />
+    </div>
+    <div class="field">
+      <label>Token Price at Receipt (USD)</label>
+      <input type="number" id="air-receive-price" placeholder="1.23" step="any" />
+    </div>
+  </div>
+  <div class="field">
+    <label>Receipt Date</label>
+    <input type="date" id="air-receive-date" />
+  </div>
+  <div class="row">
+    <div class="field">
+      <label>Sell Price (USD)</label>
+      <input type="number" id="air-sell-price" placeholder="2.50" step="any" />
+    </div>
+    <div class="field">
+      <label>Sell Date</label>
+      <input type="date" id="air-sell-date" />
+    </div>
+  </div>
+  <div class="field">
+    <label>US Tax Filing Status</label>
+    <select id="air-status">
+      <option value="single">Single</option>
+      <option value="married_joint">Married Filing Jointly</option>
+      <option value="married_sep">Married Filing Separately</option>
+      <option value="head">Head of Household</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Estimated Annual Income (USD)</label>
+    <select id="air-income">
+      <option value="0">$0 - $11,925 (0% LTCG)</option>
+      <option value="15000">$11,926 - $48,475 (15% LTCG)</option>
+      <option value="50000">$48,476 - $266,700 (15% LTCG)</option>
+      <option value="300000">$266,701+ (20% LTCG)</option>
+    </select>
+  </div>
+  <button class="btn" onclick="calcAirdrop()">Calculate Airdrop Tax</button>
+  <div class="result" id="air-result"></div>
+</div>
+
+<!-- Capital Gains Calculator -->
+<div class="calculator" id="capital-calc" style="display:none;">
+  <div class="calc-title">Crypto Capital Gains Calculator</div>
+  <div class="row">
+    <div class="field">
+      <label>Total Buy Cost (USD)</label>
+      <input type="number" id="cap-cost" placeholder="5000" step="any" />
+    </div>
+    <div class="field">
+      <label>Total Sell Proceeds (USD)</label>
+      <input type="number" id="cap-proceeds" placeholder="12000" step="any" />
+    </div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <label>Buy Date</label>
+      <input type="date" id="cap-buy-date" />
+    </div>
+    <div class="field">
+      <label>Sell Date</label>
+      <input type="date" id="cap-sell-date" />
+    </div>
+  </div>
+  <div class="field">
+    <label>US Tax Filing Status</label>
+    <select id="cap-status">
+      <option value="single">Single</option>
+      <option value="married_joint">Married Filing Jointly</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Estimated Annual Income (USD)</label>
+    <select id="cap-income">
+      <option value="0">$0 - $11,925 (0% LTCG)</option>
+      <option value="15000">$11,926 - $48,475 (15% LTCG)</option>
+      <option value="50000">$48,476 - $266,700 (15% LTCG)</option>
+      <option value="300000">$266,701+ (20% LTCG)</option>
+    </select>
+  </div>
+  <button class="btn" onclick="calcCapital()">Calculate Capital Gains Tax</button>
+  <div class="result" id="cap-result"></div>
+</div>
+
+<div class="upgrade-cta" id="upgrade-cta">
+  <h3>🚀 Unlock Full Tax Reports</h3>
+  <p>Connect your wallet. Auto-import all transactions. Export IRS Form 8949. Supports 10+ chains.</p>
+  <a class="btn" href="#pricing">View Pricing — From $19/mo</a>
+</div>
+
+<div class="disclaimer">
+  ⚠️ This calculator provides estimates only. Crypto tax rules vary by jurisdiction and individual circumstances.
+  Always consult a qualified tax professional before filing. Not financial or tax advice.
+</div>
+
+<!-- Pricing Section -->
+<div class="calculator" id="pricing" style="max-width:600px;">
+  <div class="calc-title">Pricing Plans</div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:150px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">FREE</div>
+      <div style="font-size:28px;font-weight:800;color:var(--text);">$0</div>
+      <div style="font-size:11px;color:var(--muted);margin:8px 0 14px;">Forever</div>
+      <ul style="list-style:none;font-size:12px;color:var(--muted);line-height:2;text-align:left;">
+        <li>✅ 1 wallet</li>
+        <li>✅ 50 transactions</li>
+        <li>✅ Basic calculator</li>
+        <li>❌ CSV export</li>
+        <li>❌ PDF report</li>
+      </ul>
+    </div>
+    <div style="flex:1;min-width:150px;background:#1a1200;border:1px solid var(--accent);border-radius:10px;padding:20px;text-align:center;">
+      <div style="font-size:13px;color:var(--accent);margin-bottom:8px;">PRO</div>
+      <div style="font-size:28px;font-weight:800;color:var(--accent);">$19<span style="font-size:13px;color:var(--muted);">/mo</span></div>
+      <div style="font-size:11px;color:var(--muted);margin:8px 0 14px;">or $149/year (save $79)</div>
+      <ul style="list-style:none;font-size:12px;color:var(--muted);line-height:2;text-align:left;">
+        <li>✅ 5 wallets</li>
+        <li>✅ Unlimited txns</li>
+        <li>✅ CSV export</li>
+        <li>✅ PDF tax report</li>
+        <li>✅ TurboTax import</li>
+      </ul>
+    </div>
+    <div style="flex:1;min-width:150px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">PREMIUM</div>
+      <div style="font-size:28px;font-weight:800;color:var(--text);">$49<span style="font-size:13px;color:var(--muted);">/mo</span></div>
+      <div style="font-size:11px;color:var(--muted);margin:8px 0 14px;">or $399/year (save $189)</div>
+      <ul style="list-style:none;font-size:12px;color:var(--muted);line-height:2;text-align:left;">
+        <li>✅ Unlimited wallets</li>
+        <li>✅ All chains (10+)</li>
+        <li>✅ IRS Form 8949</li>
+        <li>✅ Priority support</li>
+        <li>✅ API auto-sync</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="disclaimer" style="margin-top:40px;">
+  💳 Pay with USDC (Solana) — Low fees, fast confirmation
+</div>
+
+<footer>
+  © 2026 CryptoTaxCalc — Built for the degen community, by degens.<br>
+  <span style="font-size:10px;color:#666;">Not a tax professional. Use at your own risk.</span>
+</footer>
+
+<script>
+// ============================================================
+//  US Tax Rate Tables (2025)
+// ============================================================
+const ST_RATE = {
+  single:      [0.10, 0.12, 0.22, 0.24, 0.32, 0.35, 0.37],
+  singleBrackets: [0, 11925, 48475, 103350, 197300, 250525, 626350],
+  married_joint:      [0.10, 0.12, 0.22, 0.24, 0.32, 0.35, 0.37],
+  married_jointBrackets: [0, 23850, 96950, 206700, 394600, 501050, 751600],
+  head:      [0.10, 0.12, 0.22, 0.24, 0.32, 0.35, 0.37],
+  headBrackets: [0, 17000, 64850, 100500, 191150, 243700, 609350],
+};
+
+function getLTCGRate(income) {
+  if (income <= 11925) return 0.00;
+  if (income <= 48475) return 0.15;
+  if (income <= 266700) return 0.15;
+  return 0.20;
+}
+
+function calcIncomeTax(income, status) {
+  // rough ordinary income tax (single)
+  const brackets = [
+    [11925, 0.10], [48475, 0.12], [103350, 0.22], [197300, 0.24],
+    [250525, 0.32], [626350, 0.35], [Infinity, 0.37]
+  ];
+  let tax = 0, prev = 0;
+  for (const [cap, rate] of brackets) {
+    if (income <= prev) break;
+    const portion = Math.min(income, cap) - prev;
+    if (portion > 0) tax += portion * rate;
+    prev = cap;
+  }
+  return tax;
+}
+
+// ============================================================
+//  Tab Switching
+// ============================================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('meme-calc').style.display = 'none';
+  document.getElementById('airdrop-calc').style.display = 'none';
+  document.getElementById('capital-calc').style.display = 'none';
+  if (tab === 'meme') {
+    document.querySelectorAll('.tab')[0].classList.add('active');
+    document.getElementById('meme-calc').style.display = 'block';
+  } else if (tab === 'airdrop') {
+    document.querySelectorAll('.tab')[1].classList.add('active');
+    document.getElementById('airdrop-calc').style.display = 'block';
+  } else {
+    document.querySelectorAll('.tab')[2].classList.add('active');
+    document.getElementById('capital-calc').style.display = 'block';
+  }
+}
+
+// ============================================================
+//  Gas Fee Estimates (USD)
+// ============================================================
+const GAS_FEE = { solana: 0.01, eth: 5.0, base: 0.10, bsc: 0.20, arb: 0.30 };
+
+// ============================================================
+//  Meme Coin Calculator
+// ============================================================
+function calcMeme() {
+  const buyPrice = parseFloat(document.getElementById('meme-buy').value) || 0;
+  const sellPrice = parseFloat(document.getElementById('meme-sell').value) || 0;
+  const qty = parseFloat(document.getElementById('meme-qty').value) || 0;
+  const chain = document.getElementById('meme-chain').value;
+  const buyDate = new Date(document.getElementById('meme-buy-date').value || '2025-01-01');
+  const sellDate = new Date(document.getElementById('meme-sell-date').value || '2025-06-01');
+  const income = parseInt(document.getElementById('meme-income').value) || 0;
+
+  if (buyPrice <= 0 || sellPrice <= 0 || qty <= 0) {
+    alert('Please fill in buy price, sell price, and quantity.');
+    return;
+  }
+
+  const buyCost = buyPrice * qty;
+  const sellProceeds = sellPrice * qty;
+  const grossProfit = sellProceeds - buyCost;
+  const gasFee = GAS_FEE[chain] || 0.20;
+  const netProfit = grossProfit - gasFee;
+
+  // Holding period
+  const msPerDay = 86400000;
+  const holdingDays = Math.round((sellDate - buyDate) / msPerDay);
+  const isLongTerm = holdingDays > 365;
+
+  // Tax
+  let taxRate, taxOwed;
+  if (isLongTerm) {
+    taxRate = getLTCGRate(income);
+    taxOwed = Math.max(0, netProfit) * taxRate;
+  } else {
+    // Short-term: taxed as ordinary income (use rough estimate)
+    taxRate = 0.22; // assume 22% bracket for simplicity; user can adjust
+    taxOwed = Math.max(0, netProfit) * taxRate;
+  }
+
+  const afterTax = netProfit - taxOwed;
+
+  const profitClass = netProfit >= 0 ? 'profit' : 'loss';
+  const afterTaxClass = afterTax >= 0 ? 'profit' : 'loss';
+
+  document.getElementById('meme-result').innerHTML = `
+    <h3>📊 Calculation Result</h3>
+    <div class="result-row"><span class="label">Buy Cost</span><span class="value">$${fmt(buyCost)}</span></div>
+    <div class="result-row"><span class="label">Sell Proceeds</span><span class="value">$${fmt(sellProceeds)}</span></div>
+    <div class="result-row"><span class="label">Gas Fee (${chain.toUpperCase()})</span><span class="value">$${fmt(gasFee)}</span></div>
+    <div class="result-row"><span class="label">Gross Profit</span><span class="value ${profitClass}">$${fmt(grossProfit)}</span></div>
+    <div class="result-row"><span class="label">Holding Period</span><span class="value">${holdingDays} days (${isLongTerm ? 'Long-term' : 'Short-term'})</span></div>
+    <div class="result-row"><span class="label">Tax Rate (${isLongTerm ? 'LTCG' : 'STCG'})</span><span class="value tax">${(taxRate * 100).toFixed(0)}%</span></div>
+    <div class="result-row"><span class="label">Est. Tax Owed</span><span class="value tax">$${fmt(taxOwed)}</span></div>
+    <div class="result-row" style="border-top:2px solid var(--accent);padding-top:10px;margin-top:4px;">
+      <span class="label" style="font-weight:700;">After-Tax Profit</span>
+      <span class="value ${afterTaxClass}" style="font-size:16px;">$${fmt(afterTax)}</span>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--muted);">
+      ⚠️ ${isLongTerm ? 'Long-term capital gains taxed at preferential rates (0%/15%/20%).' : 'Short-term capital gains taxed as ordinary income (up to 37%).'}
+    </div>
+  `;
+  document.getElementById('meme-result').classList.add('show');
+  document.getElementById('upgrade-cta').classList.add('show');
+}
+
+// ============================================================
+//  Airdrop Calculator
+// ============================================================
+function calcAirdrop() {
+  const qty = parseFloat(document.getElementById('air-qty').value) || 0;
+  const receivePrice = parseFloat(document.getElementById('air-receive-price').value) || 0;
+  const sellPrice = parseFloat(document.getElementById('air-sell-price').value) || 0;
+  const receiveDate = new Date(document.getElementById('air-receive-date').value || '2024-09-01');
+  const sellDate = new Date(document.getElementById('air-sell-date').value || '2025-03-01');
+  const income = parseInt(document.getElementById('air-income').value) || 0;
+
+  if (qty <= 0 || receivePrice <= 0 || sellPrice <= 0) {
+    alert('Please fill in all fields.');
+    return;
+  }
+
+  // Airdrop is ordinary income at receipt (FMV at that time)
+  const ordinaryIncome = qty * receivePrice;
+  const costBasis = ordinaryIncome; // basis = FMV when received
+  const sellProceeds = qty * sellPrice;
+  const capitalGain = sellProceeds - costBasis;
+
+  const msPerDay = 86400000;
+  const holdingDays = Math.round((sellDate - receiveDate) / msPerDay);
+  const isLongTerm = holdingDays > 365;
+
+  let taxRate, capitalTax;
+  if (isLongTerm) {
+    taxRate = getLTCGRate(income);
+    capitalTax = Math.max(0, capitalGain) * taxRate;
+  } else {
+    taxRate = 0.22;
+    capitalTax = Math.max(0, capitalGain) * taxRate;
+  }
+
+  // Ordinary income tax on airdrop receipt (simplified)
+  const ordinaryTax = ordinaryIncome * 0.22;
+  const totalTax = ordinaryTax + capitalTax;
+  const netProceeds = sellProceeds - ordinaryTax - capitalTax;
+
+  const profitClass = capitalGain >= 0 ? 'profit' : 'loss';
+
+  document.getElementById('air-result').innerHTML = `
+    <h3>🪂 Airdrop Tax Result</h3>
+    <div class="result-row"><span class="label">Tokens Received</span><span class="value">${fmt(qty, 0)} tokens</span></div>
+    <div class="result-row"><span class="label">Value at Receipt (Ordinary Income)</span><span class="value tax">$${fmt(ordinaryIncome)}</span></div>
+    <div class="result-row"><span class="label">Sell Proceeds</span><span class="value">$${fmt(sellProceeds)}</span></div>
+    <div class="result-row"><span class="label">Capital Gain/Loss</span><span class="value ${profitClass}">$${fmt(capitalGain)}</span></div>
+    <div class="result-row"><span class="label">Holding Period (after receipt)</span><span class="value">${holdingDays} days (${isLongTerm ? 'Long-term' : 'Short-term'})</span></div>
+    <div class="result-row"><span class="label">Tax on Airdrop (Ordinary)</span><span class="value tax">~$${fmt(ordinaryTax)}</span></div>
+    <div class="result-row"><span class="label">Tax on Capital Gain</span><span class="value tax">~$${fmt(capitalTax)}</span></div>
+    <div class="result-row"><span class="label">Total Tax Owed</span><span class="value tax">$${fmt(totalTax)}</span></div>
+    <div class="result-row" style="border-top:2px solid var(--accent);padding-top:10px;margin-top:4px;">
+      <span class="label" style="font-weight:700;">Net After Tax</span>
+      <span class="value ${netProceeds >= 0 ? 'profit' : 'loss'}" style="font-size:16px;">$${fmt(netProceeds)}</span>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--muted);">
+      ⚠️ Airdrops are taxed as ordinary income at receipt (FMV). Subsequent gain/loss is capital gain.<br>
+      This is a simplified estimate. Consult a tax professional.
+    </div>
+  `;
+  document.getElementById('air-result').classList.add('show');
+  document.getElementById('upgrade-cta').classList.add('show');
+}
+
+// ============================================================
+//  Capital Gains Calculator
+// ============================================================
+function calcCapital() {
+  const cost = parseFloat(document.getElementById('cap-cost').value) || 0;
+  const proceeds = parseFloat(document.getElementById('cap-proceeds').value) || 0;
+  const buyDate = new Date(document.getElementById('cap-buy-date').value || '2024-01-01');
+  const sellDate = new Date(document.getElementById('cap-sell-date').value || '2025-06-01');
+  const income = parseInt(document.getElementById('cap-income').value) || 0;
+
+  if (cost <= 0 || proceeds <= 0) {
+    alert('Please fill in buy cost and sell proceeds.');
+    return;
+  }
+
+  const gain = proceeds - cost;
+  const msPerDay = 86400000;
+  const holdingDays = Math.round((sellDate - buyDate) / msPerDay);
+  const isLongTerm = holdingDays > 365;
+
+  let taxRate, taxOwed;
+  if (isLongTerm) {
+    taxRate = getLTCGRate(income);
+    taxOwed = Math.max(0, gain) * taxRate;
+  } else {
+    taxRate = 0.22;
+    taxOwed = Math.max(0, gain) * taxRate;
+  }
+
+  const afterTax = gain - taxOwed;
+  const gainClass = gain >= 0 ? 'profit' : 'loss';
+  const afterClass = afterTax >= 0 ? 'profit' : 'loss';
+
+  document.getElementById('cap-result').innerHTML = `
+    <h3>📊 Capital Gains Result</h3>
+    <div class="result-row"><span class="label">Cost Basis</span><span class="value">$${fmt(cost)}</span></div>
+    <div class="result-row"><span class="label">Proceeds</span><span class="value">$${fmt(proceeds)}</span></div>
+    <div class="result-row"><span class="label">Capital Gain / Loss</span><span class="value ${gainClass}">$${fmt(gain)}</span></div>
+    <div class="result-row"><span class="label">Holding Period</span><span class="value">${holdingDays} days (${isLongTerm ? 'Long-term ✅' : 'Short-term'})</span></div>
+    <div class="result-row"><span class="label">Tax Rate (${isLongTerm ? 'Long-term' : 'Short-term'})</span><span class="value tax">${(taxRate * 100).toFixed(0)}%</span></div>
+    <div class="result-row"><span class="label">Tax Owed</span><span class="value tax">$${fmt(taxOwed)}</span></div>
+    <div class="result-row" style="border-top:2px solid var(--accent);padding-top:10px;margin-top:4px;">
+      <span class="label" style="font-weight:700;">After-Tax Profit</span>
+      <span class="value ${afterClass}" style="font-size:16px;">$${fmt(afterTax)}</span>
+    </div>
+  `;
+  document.getElementById('cap-result').classList.add('show');
+  document.getElementById('upgrade-cta').classList.add('show');
+}
+
+// ============================================================
+//  Utils
+// ============================================================
+function fmt(num, dec = 2) {
+  if (num === undefined || isNaN(num)) return '0.00';
+  return Math.abs(num) >= 1e9 ? (num/1e9).toFixed(2)+'B'
+       : Math.abs(num) >= 1e6 ? (num/1e6).toFixed(2)+'M'
+       : Math.abs(num) >= 1e3 ? (num/1e3).toFixed(2)+'K'
+       : num.toFixed(dec);
+}
+</script>
+
+</body>
+</html>
