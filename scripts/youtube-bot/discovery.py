@@ -4,14 +4,20 @@
 # ============================================================
 
 import json
+import os
 import time
 import random
 import logging
+import subprocess
+import sys
 import urllib.request
 import urllib.parse
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
 log = logging.getLogger(__name__)
+
+SCRIPT_DIR = Path(__file__).parent
 
 
 class VideoDiscovery:
@@ -83,6 +89,12 @@ class VideoDiscovery:
 
         for channel_id in channel_ids:
             try:
+                # 获取对应的handle（如果有）
+                handle = None
+                ch_info = next((ch for ch in getattr(self, '_channel_infos', []) if ch.get('channel_id') == channel_id), None)
+                if ch_info:
+                    handle = ch_info.get('handle')
+
                 # 方法1：使用 YouTube Search API（如果可用）
                 if self.api_key:
                     channel_videos = self._search_api(channel_id,
@@ -92,7 +104,8 @@ class VideoDiscovery:
                 else:
                     # 方法2：无API key时使用网页抓取
                     channel_videos = self._scrape_channel(channel_id,
-                                                          max_results_per_channel)
+                                                          max_results_per_channel,
+                                                          handle=handle)
                     videos.extend(channel_videos)
 
                 # 随机延迟避免请求过快
@@ -152,28 +165,63 @@ class VideoDiscovery:
         log.info(f"  📌 频道 ...{channel_id[-8:]} → {len(videos)} 个新视频 (API)")
         return videos
 
-    def _scrape_channel(self, channel_id, max_results):
+    def _scrape_channel(self, channel_id, max_results, handle=None):
         """
-        无 API key 时使用网页抓取获取频道最新视频
-        通过 YouTube 频道页面 @videos tab 获取
+        无 API key 时使用 Playwright 渲染页面获取频道最新视频
+        调用独立的 _scrape_channel.py 脚本（避免字符串转义问题）
         """
-        import re
-        videos = []
-
+        
+        scrape_script = SCRIPT_DIR / "_scrape_channel.py"
+        
         try:
-            # 尝试多种频道 URL 格式
-            urls_to_try = [
-                f"https://www.youtube.com/channel/{channel_id}/videos",
-                f"https://www.youtube.com/@{channel_id}/videos",
-            ]
+            result = subprocess.run(
+                [sys.executable, str(scrape_script), channel_id, str(max_results), handle or ""],
+                capture_output=True, text=True, timeout=50,
+                env={**os.environ, 'PYTHONIOENCODING': 'utf-8'},
+                cwd=str(SCRIPT_DIR)
+            )
+            
+            if result.returncode == 0 and result.stdout.strip():
+                data = json.loads(result.stdout)
+                videos = []
+                for item in data:
+                    vid = item.get('id', '')
+                    if not vid:
+                        continue
+                    videos.append({
+                        'video_id': vid,
+                        'title': item.get('title', ''),
+                        'channel_title': '',
+                        'channel_id': channel_id,
+                        'published_at': '',
+                        'description': '',
+                        'url': f"https://www.youtube.com/watch?v={vid}",
+                        'thumbnail': f"https://img.youtube.com/vi/{vid}/hqdefault.jpg",
+                    })
+                log.info(f"  📌 频道 ...{channel_id[-8:]} → {len(videos)} 个视频 (playwright)")
+                return videos
+            else:
+                log.warning(f"  ⚠ Playwright返回空/错误 ({channel_id}): rc={result.returncode} err={result.stderr[:300]}")
+
+        except subprocess.TimeoutExpired:
+            log.warning(f"  ⚠ Playwright超时 ({channel_id})")
+        except Exception as e:
+            log.warning(f"  ⚠ Playwright抓取失败 ({channel_id}): {e}")
+        finally:
+            pass  # 不删临时脚本，下次覆盖
+
+        # Fallback: 简单 urllib 抓取（只拿video ID）
+        import re
+        try:
+            urls_to_try = []
+            if handle:
+                urls_to_try.append(f"https://www.youtube.com{handle}/videos")
+            urls_to_try.append(f"https://www.youtube.com/channel/{channel_id}/videos")
 
             content = None
             for url in urls_to_try:
                 req = urllib.request.Request(url, headers={
-                    'User-Agent': random.choice([
-                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36',
-                        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Safari/605.1.15',
-                    ])
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36',
                 })
                 try:
                     resp = urllib.request.urlopen(req, timeout=15)
@@ -182,81 +230,20 @@ class VideoDiscovery:
                 except:
                     continue
 
-            if not content:
-                log.warning(f"  ⚠ 无法抓取频道页面: {channel_id}")
-                return []
-
-            # 用正则提取视频信息
-            # YouTube 页面中包含 ytInitialData 或 videoId 模式
-            patterns = [
-                r'"videoId":"([^"]+)"[^}]*?"title":\s*"?([^"\\]+)"?',
-                r'/watch\?v=([a-zA-Z0-9_-]{11})',
-            ]
-
-            found_video_ids = set()
-
-            # 尝试从 JSON 数据块提取
-            json_match = re.search(r'var ytInitialData\s*=\s*(\{.+?\});', content, re.DOTALL)
-            if json_match:
-                try:
-                    raw_data = json_match.group(1)
-                    data = json.loads(raw_data)
-
-                    # 遍历 JSON 找到视频列表
-                    raw_str = json.dumps(data)
-
-                    # 提取所有 videoId
-                    all_ids = re.findall(r'"videoId"\s*:\s*"([a-zA-Z0-9_-]{11})"', raw_str)
-
-                    # 提取所有标题（紧邻 videoId 的 title）
-                    titles_raw = re.findall(r'"title"\s*:\s*\{"runs":\s*\[\{"text"\s*:\s*"([^"]+)"', raw_str)
-                    if not titles_raw:
-                        titles_raw = re.findall(r'"title"\s*:\s*"([^"]{10,200})"', raw_str)
-
-                    for i, vid in enumerate(all_ids):
-                        if vid in found_video_ids or len(found_video_ids) >= max_results:
-                            break
-                        found_video_ids.add(vid)
-                        title = titles_raw[i] if i < len(titles_raw) else f"Video #{i+1}"
-
-                        videos.append({
-                            'video_id': vid,
-                            'title': title,
-                            'channel_title': '',
-                            'channel_id': channel_id,
-                            'published_at': '',
-                            'description': '',
-                            'url': f"https://www.youtube.com/watch?v={vid}",
-                            'thumbnail': f"https://img.youtube.com/vi{vid}/hqdefault.jpg",
-                        })
-
-                except json.JSONDecodeError:
-                    pass
-
-            # Fallback: 如果 JSON 解析失败，用简单正则
-            if not videos and patterns:
-                ids_found = re.findall(patterns[1], content)
-                for vid in ids_found:
-                    if vid in found_video_ids or len(found_video_ids) >= max_results:
-                        break
-                    found_video_ids.add(vid)
-                    videos.append({
-                        'video_id': vid,
-                        'title': '',
-                        'channel_title': '',
-                        'channel_id': channel_id,
-                        'published_at': '',
-                        'description': '',
-                        'url': f"https://www.youtube.com/watch?v={vid}",
-                        'thumbnail': f"https://img.youtube.com/vi{vid}/hqdefault.jpg",
-                    })
-
-            log.info(f"  📌 频道 ...{channel_id[-8:]} → {len(videos)} 个视频 (scrape)")
-            return videos
+            if content:
+                ids_found = list(set(re.findall(r'/watch\?v=([a-zA-Z0-9_-]{11})', content)))[:max_results]
+                videos = [{'video_id': vid, 'title': '', 'channel_title': '', 'channel_id': channel_id,
+                           'published_at': '', 'description': '',
+                           'url': f'https://www.youtube.com/watch?v={vid}',
+                           'thumbnail': f'https://img.youtube.com/vi/{vid}/hqdefault.jpg'}
+                          for vid in ids_found]
+                log.info(f"  📌 频道 ...{channel_id[-8:]} → {len(videos)} 个视频 (fallback)")
+                return videos
 
         except Exception as e:
-            log.error(f"  ❌ 网页抓取失败 ({channel_id}): {e}")
-            return []
+            log.error(f"  ❌ 所有方式都失败 ({channel_id}): {e}")
+
+        return []
 
     def get_trending_crypto_videos(self, query="crypto", max_results=10):
         """

@@ -406,6 +406,7 @@ async def dry_run(config, state):
     discovery = VideoDiscovery(api_key=config.get('youtube_api_key'))
     generator = CommentGenerator(link=config.get('promo_link'))
     channels = config.get('target_channels', [])
+    discovery._channel_infos = channels  # 传handle信息（必须在channels定义之后）
 
     log.info("=" * 55)
     log.info("🔍 试运行模式 — 只搜索不发送评论")
