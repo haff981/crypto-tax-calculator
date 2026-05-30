@@ -3,286 +3,247 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crypto Tax Calculator — Meme Coin & Airdrop Tax Calculator</title>
-  <meta name="description" content="Free crypto tax calculator for meme coins, airdrops. Calculate capital gains tax, after-tax profit. Supports US, CA, AU tax rules." />
+  <title>CryptoTaxCalc — Crypto & Airdrop Tax Calculator</title>
+  <meta name="description" content="Free crypto tax calculator for meme coins, airdrops, capital gains. Calculate your after-tax profit. Built for degens." />
   <style>
     :root {
-      --bg: #0d1117;
-      --card: #161b22;
-      --border: #30363d;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --accent: #f7931a;
-      --green: #3fb950;
-      --red: #f85149;
-      --blue: #58a6ff;
+      --bg: #0d1117; --card: #161b22; --border: #30363d;
+      --text: #e6edf3; --muted: #8b949e; --accent: #f7931a;
+      --green: #3fb950; --red: #f85149; --blue: #58a6ff;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-    header {
-      border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
-    header nav a {
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 13px;
-      margin-left: 20px;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ===== NAVBAR ===== */
+    header { border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: rgba(13,17,23,0.95); backdrop-filter: blur(8px); z-index: 1000; }
+    header h1 { font-size: 18px; font-weight: 700; color: var(--accent); cursor: pointer; }
+    header nav { display: flex; align-items: center; gap: 6px; }
+    header nav a { color: var(--muted); text-decoration: none; font-size: 13px; margin-left: 16px; transition: color 0.15s; }
     header nav a:hover { color: var(--text); }
-    .hero {
-      text-align: center;
-      padding: 60px 24px 40px;
-      max-width: 600px;
-      margin: 0 auto;
+
+    /* Auth buttons in navbar */
+    .nav-auth-btn {
+      padding: 6px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border); background: transparent;
+      color: var(--muted); transition: all 0.15s; margin-left: 12px;
     }
-    .hero h2 {
-      font-size: 32px;
-      font-weight: 800;
-      margin-bottom: 12px;
-      background: linear-gradient(135deg, #f7931a, #ffd700);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .nav-auth-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-signup { background: var(--accent) !important; color: #000 !important; border-color: var(--accent) !important; }
+    .nav-signup:hover { opacity: 0.9; }
+
+    /* User avatar dropdown */
+    .user-menu { position: relative; margin-left: 16px; }
+    .user-avatar {
+      width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #f7931a, #ffd700);
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;
+      color: #000; cursor: pointer; border: 2px solid var(--border); transition: border-color 0.15s;
     }
+    .user-avatar:hover { border-color: var(--accent); }
+    .dropdown {
+      display: none; position: absolute; right: 0; top: 44px; width: 220px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5); z-index: 1001; overflow: hidden;
+    }
+    .dropdown.show { display: block; animation: slideDown 0.15s ease; }
+    @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+    .dropdown-header { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .dropdown-header .email { font-size: 13px; font-weight: 600; color: var(--text); word-break: break-all; }
+    .dropdown-header .plan-badge { display: inline-block; margin-top: 4px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .plan-free { background: var(--border); color: var(--muted); }
+    .plan-pro { background: rgba(247,147,26,0.15); color: var(--accent); }
+    .plan-premium { background: rgba(255,215,0,0.15); color: #ffd700; }
+    .dropdown-item { padding: 10px 16px; font-size: 13px; color: var(--muted); cursor: pointer; transition: all 0.1s; display: flex; align-items: center; gap: 8px; border: none; background: none; width: 100%; text-align: left; }
+    .dropdown-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .dropdown-divider { height: 1px; background: var(--border); }
+    .dropdown-item.danger:hover { background: rgba(248,81,73,0.1); color: var(--red); }
+
+    /* ===== HERO ===== */
+    .hero { text-align: center; padding: 56px 24px 36px; max-width: 600px; margin: 0 auto; }
+    .hero h2 { font-size: 32px; font-weight: 800; margin-bottom: 12px; background: linear-gradient(135deg, #f7931a, #ffd700); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .hero p { color: var(--muted); font-size: 15px; line-height: 1.6; }
-    .tabs {
-      display: flex;
-      justify-content: center;
-      gap: 4px;
-      margin: 32px auto 0;
-      max-width: 500px;
-      background: var(--card);
-      border-radius: 10px;
-      padding: 4px;
-      border: 1px solid var(--border);
-    }
-    .tab {
-      flex: 1;
-      padding: 10px;
-      text-align: center;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--muted);
-      transition: all 0.2s;
-    }
+
+    /* ===== TABS ===== */
+    .tabs { display: flex; justify-content: center; gap: 4px; margin: 30px auto 0; max-width: 500px; background: var(--card); border-radius: 10px; padding: 4px; border: 1px solid var(--border); }
+    .tab { flex: 1; padding: 10px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); transition: all 0.2s; }
     .tab.active { background: var(--accent); color: #000; }
     .tab:hover:not(.active) { color: var(--text); background: #1c2128; }
-    .calculator {
-      max-width: 520px;
-      margin: 32px auto;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
-    }
-    .calc-title {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 20px;
-      color: var(--text);
-    }
+
+    /* ===== CALCULATOR ===== */
+    .calculator { max-width: 520px; margin: 28px auto; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 28px; }
+    .calc-title { font-size: 15px; font-weight: 700; margin-bottom: 20px; color: var(--text); }
     .field { margin-bottom: 16px; }
-    .field label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--muted);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .field input, .field select {
-      width: 100%;
-      padding: 10px 12px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-      transition: border 0.2s;
-    }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .field input, .field select { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; outline: none; transition: border 0.2s; }
     .field input:focus, .field select:focus { border-color: var(--accent); }
     .field select option { background: var(--card); }
     .row { display: flex; gap: 12px; }
     .row .field { flex: 1; }
-    .btn {
-      width: 100%;
-      padding: 12px;
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.2s;
-      margin-top: 8px;
-    }
+    .btn { width: 100%; padding: 12px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; margin-top: 8px; }
     .btn:hover { opacity: 0.9; }
-    .result {
-      margin-top: 20px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px;
-      display: none;
-    }
+    .btn-secondary { background: var(--border); color: var(--text); }
+    .result { margin-top: 20px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: none; }
     .result.show { display: block; }
-    .result h3 {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 14px;
-      color: var(--accent);
-    }
-    .result-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-    }
+    .result h3 { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--accent); }
+    .result-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
     .result-row:last-child { border-bottom: none; }
     .result-row .label { color: var(--muted); }
     .result-row .value { font-weight: 700; }
-    .profit { color: var(--green); }
-    .loss { color: var(--red); }
-    .tax { color: var(--accent); }
-    .disclaimer {
-      max-width: 520px;
-      margin: 16px auto 60px;
-      font-size: 11px;
-      color: var(--muted);
-      line-height: 1.5;
-      text-align: center;
-    }
-    .upgrade-cta {
-      max-width: 520px;
-      margin: 24px auto;
-      background: linear-gradient(135deg, #1a1200, #2a1f00);
-      border: 1px solid #f7931a44;
-      border-radius: 12px;
-      padding: 24px;
-      text-align: center;
-      display: none;
-    }
+    .profit { color: var(--green); } .loss { color: var(--red); } .tax { color: var(--accent); }
+    .disclaimer { max-width: 520px; margin: 16px auto 60px; font-size: 11px; color: var(--muted); line-height: 1.5; text-align: center; }
+    .upgrade-cta { max-width: 520px; margin: 24px auto; background: linear-gradient(135deg, #1a1200, #2a1f00); border: 1px solid #f7931a44; border-radius: 12px; padding: 24px; text-align: center; display: none; }
     .upgrade-cta.show { display: block; }
     .upgrade-cta h3 { color: var(--accent); font-size: 16px; margin-bottom: 8px; }
     .upgrade-cta p { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
     .upgrade-cta .btn { background: var(--accent); color: #000; text-decoration: none; display: inline-block; width: auto; padding: 10px 28px; cursor: pointer; border: none; font-size: 13px; font-weight: 700; border-radius: 8px; }
 
     /* ===== PAYMENT MODAL ===== */
-    .modal-overlay {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.80); z-index: 99999; justify-content: center; align-items: center;
-      backdrop-filter: blur(4px);
-    }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.80); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
     .modal-overlay.show { display: flex; animation: fadeIn 0.2s ease; }
     @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-    .modal {
-      background: var(--card); border: 2px solid var(--accent); border-radius: 16px;
-      padding: 30px; max-width: 460px; width: 92%; position: relative;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    }
+    .modal { background: var(--card); border: 2px solid var(--accent); border-radius: 16px; padding: 30px; max-width: 480px; width: 92%; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
     .modal h3 { color: var(--accent); font-size: 15px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
     .modal .plan-name { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
     .modal .plan-price { font-size: 32px; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
     .modal .plan-price span { font-size: 14px; color: var(--muted); font-weight: 400; }
-    .modal .plan-desc { font-size: 12px; color: var(--muted); margin-bottom: 22px; }
+    .modal .plan-desc { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+
+    /* User info bar inside payment modal */
+    .user-info-bar { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 18px; }
+    .user-info-bar .label { font-size: 10px; color: var(--blue); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .user-info-bar .value { font-size: 13px; color: var(--text); margin-top: 2px; }
 
     /* Chain selector */
     .chain-select { margin-bottom: 18px; }
     .chain-select label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px; }
     .chain-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-    .chain-btn {
-      background: var(--bg); border: 2px solid var(--border); color: var(--muted);
-      padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer;
-      font-weight: 600; transition: all 0.15s; flex: 1; min-width: 90px; text-align: center;
-    }
+    .chain-btn { background: var(--bg); border: 2px solid var(--border); color: var(--muted); padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 600; transition: all 0.15s; flex: 1; min-width: 90px; text-align: center; }
     .chain-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(247,147,26,0.08); }
     .chain-btn:hover:not(.active) { border-color: #555; }
 
     /* Wallet address */
     .wallet-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .wallet-addr {
-      background: var(--bg); border: 1px dashed var(--green); border-radius: 8px;
-      padding: 12px 14px; font-family: 'Courier New', monospace; font-size: 12px; color: var(--green);
-      word-break: break-all; margin-bottom: 8px; cursor: pointer; user-select: all;
-      transition: border-color 0.2s;
-    }
+    .wallet-addr { background: var(--bg); border: 1px dashed var(--green); border-radius: 8px; padding: 12px 14px; font-family: 'Courier New', monospace; font-size: 12px; color: var(--green); word-break: break-all; margin-bottom: 8px; cursor: pointer; user-select: all; transition: border-color 0.2s; }
     .wallet-addr:hover { border-color: var(--accent); background: rgba(63,185,80,0.05); }
     .copy-ok { font-size: 12px; color: var(--green); display: none; margin-bottom: 12px; font-weight: 600; }
     .copy-ok.show { display: block; }
 
+    /* Amount display */
+    .amount-display { background: rgba(247,147,26,0.08); border: 1px solid rgba(247,147,26,0.3); border-radius: 8px; padding: 12px 16px; text-align: center; margin: 12px 0; }
+    .amount-display .amt-label { font-size: 11px; color: var(--muted); }
+    .amount-display .amt-value { font-size: 22px; font-weight: 800; color: var(--accent); }
+
     /* Steps */
     .steps { margin-top: 16px; }
     .step { font-size: 12px; color: var(--muted); margin: 8px 0; padding-left: 16px; position: relative; }
-    .step::before { content: '→'; position: absolute; left: 0; color: var(--accent); font-weight: bold; }
+    .step::before { content: '\2192'; position: absolute; left: 0; color: var(--accent); font-weight: bold; }
 
-    /* Close */
-    .close-btn {
-      position: absolute; top: 14px; right: 18px; background: none; border: none;
-      color: var(--muted); font-size: 24px; cursor: pointer; line-height: 1;
-      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-      border-radius: 50%; transition: all 0.15s;
-    }
+    /* TXID input */
+    .txid-section { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .txid-input { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; font-family: monospace; outline: none; }
+    .txid-input:focus { border-color: var(--accent); }
+    .txid-submit { width: 100%; margin-top: 8px; padding: 10px; background: var(--green); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .txid-submit:hover { opacity: 0.9; }
+    .txid-status { font-size: 12px; margin-top: 8px; text-align: center; font-weight: 600; display: none; }
+    .txid-status.ok { color: var(--green); display: block; }
+    .txid-status.err { color: var(--red); display: block; }
+
+    /* Close button */
+    .close-btn { position: absolute; top: 14px; right: 18px; background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; line-height: 1; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.15s; }
     .close-btn:hover { color: var(--text); background: rgba(255,255,255,0.08); }
 
     /* Pricing card buy buttons */
-    .price-btn {
-      width: 100%; padding: 12px; margin-top: 14px;
-      border: none; border-radius: 8px; font-size: 14px; font-weight: 700;
-      cursor: pointer; transition: all 0.2s;
-    }
+    .price-btn { width: 100%; padding: 12px; margin-top: 14px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
     .price-btn-pro { background: var(--accent); color: #000; }
     .price-btn-premium { background: linear-gradient(135deg, #f7931a, #ffd700); color: #000; }
     .price-btn-free { background: var(--border); color: var(--muted); cursor: default; }
     .price-btn-pro:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(247,147,26,0.35); }
     .price-btn-premium:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(247,147,26,0.35); }
 
-    /* Highlight badge */
-    .badge-popular {
-      display: inline-block; background: var(--accent); color: #000;
-      font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;
-      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
-    }
+    /* Badge */
+    .badge-popular { display: inline-block; background: var(--accent); color: #000; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
 
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 24px;
-      text-align: center;
-      font-size: 12px;
-      color: var(--muted);
+    /* ===== AUTH MODAL (Login/Register) ===== */
+    .auth-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.82); z-index: 99998; justify-content: center; align-items: center; backdrop-filter: blur(6px); }
+    .auth-overlay.show { display: flex; animation: fadeIn 0.2s ease; }
+    .auth-modal { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 400px; width: 90%; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .auth-modal h3 { font-size: 22px; font-weight: 800; margin-bottom: 4px; color: var(--text); }
+    .auth-modal .sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    .auth-modal .field { margin-bottom: 14px; }
+    .auth-modal .field input { font-size: 14px; }
+    .auth-modal .auth-btn { width: 100%; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; margin-top: 4px; }
+    .auth-primary { background: var(--accent); color: #000; }
+    .auth-primary:hover { opacity: 0.9; }
+    .auth-switch { text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted); }
+    .auth-switch a { color: var(--blue); cursor: pointer; text-decoration: underline; }
+    .auth-error { font-size: 12px; color: var(--red); margin-top: 8px; display: none; }
+    .auth-error.show { display: block; }
+
+    /* ===== DASHBOARD MODAL ===== */
+    .dash-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.82); z-index: 99997; justify-content: center; align-items: center; backdrop-filter: blur(6px); overflow-y: auto; padding: 20px 0; }
+    .dash-overlay.show { display: flex; animation: fadeIn 0.2s ease; }
+    .dash-modal { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 520px; width: 90%; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .dash-modal h3 { font-size: 20px; font-weight: 800; margin-bottom: 4px; color: var(--text); }
+    .dash-modal .sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .stat-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+    .stat-card .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .stat-value { font-size: 18px; font-weight: 800; color: var(--text); margin-top: 2px; }
+    .payment-history { margin-top: 16px; }
+    .payment-history h4 { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 10px; }
+    .pay-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .pay-row:last-child { border-bottom: none; }
+    .pay-status-pending { color: var(--accent); font-weight: 600; }
+    .pay-status-active { color: var(--green); font-weight: 600; }
+
+    footer { border-top: 1px solid var(--border); padding: 24px; text-align: center; font-size: 12px; color: var(--muted); }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      header { padding: 12px 16px; }
+      header nav a:not(.nav-auth-btn) { display: none; }
+      .hero h2 { font-size: 24px; }
+      .calculator { padding: 20px; margin: 20px auto; }
+      .modal { padding: 20px; }
+      .chain-btns { flex-direction: column; }
     }
   </style>
 </head>
 <body>
 
+<!-- ===== NAVBAR ===== -->
 <header>
-  <h1>🪙 CryptoTaxCalc</h1>
-  <nav>
+  <h1 onclick="location.reload()">🪙 CryptoTaxCalc</h1>
+  <nav id="navbar-nav">
+    <!-- Dynamic content: guest sees Login/Signup, user sees avatar -->
     <a href="#calculator">Calculator</a>
     <a href="#pricing">Pricing</a>
     <a href="https://github.com/haff981/crypto-tax-calculator" target="_blank">GitHub</a>
+    <div id="nav-guest" style="display:flex;">
+      <button class="nav-auth-btn" onclick="openAuth('login')">Log In</button>
+      <button class="nav-auth-btn nav-signup" onclick="openAuth('signup')">Sign Up Free</button>
+    </div>
+    <div id="nav-user" style="display:none;" class="user-menu">
+      <div class="user-avatar" onclick="toggleDropdown()" id="user-avatar-letter">U</div>
+      <div class="dropdown" id="user-dropdown">
+        <div class="dropdown-header">
+          <div class="email" id="dropdown-email"></div>
+          <span class="plan-badge plan-free" id="dropdown-plan">Free Plan</span>
+        </div>
+        <button class="dropdown-item" onclick="openDashboard()">📊 My Dashboard</button>
+        <button class="dropdown-item" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">⬆️ Upgrade Plan</button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item danger" onclick="logout()">🚪 Sign Out</button>
+      </div>
+    </div>
   </nav>
 </header>
 
+<!-- ===== HERO ===== -->
 <div class="hero">
   <h2>Crypto Tax Calculator</h2>
-  <p>Calculate your meme coin profits, capital gains tax, and after-tax returns. Free, fast, no sign-up required.</p>
+  <p>Calculate meme coin profits, airdrop taxes &amp; capital gains. Built for degens, by degens 🫡</p>
 </div>
 
+<!-- ===== TABS ===== -->
 <div class="tabs">
   <div class="tab active" onclick="switchTab('meme')">💎 Meme Coin</div>
   <div class="tab" onclick="switchTab('airdrop')">🪂 Airdrop</div>
@@ -291,28 +252,15 @@
 
 <!-- Meme Coin Calculator -->
 <div class="calculator" id="meme-calc">
-  <div class="calc-title">Meme Coin Profit & Tax Calculator</div>
-  <div class="field">
-    <label>Coin / Token Name</label>
-    <input type="text" id="meme-coin" placeholder="e.g. PEPE, WIF, BONK" />
+  <div class="calc-title">Meme Coin Profit &amp; Tax Calculator</div>
+  <div class="field"><label>Coin / Token Name</label><input type="text" id="meme-coin" placeholder="e.g. PEPE, WIF, BONK" /></div>
+  <div class="row">
+    <div class="field"><label>Buy Price (USD)</label><input type="number" id="meme-buy" placeholder="0.000123" step="any" /></div>
+    <div class="field"><label>Sell Price (USD)</label><input type="number" id="meme-sell" placeholder="0.000456" step="any" /></div>
   </div>
   <div class="row">
-    <div class="field">
-      <label>Buy Price (USD)</label>
-      <input type="number" id="meme-buy" placeholder="0.000123" step="any" />
-    </div>
-    <div class="field">
-      <label>Sell Price (USD)</label>
-      <input type="number" id="meme-sell" placeholder="0.000456" step="any" />
-    </div>
-  </div>
-  <div class="row">
-    <div class="field">
-      <label>Quantity / Tokens</label>
-      <input type="number" id="meme-qty" placeholder="1000000" step="any" />
-    </div>
-    <div class="field">
-      <label>Blockchain</label>
+    <div class="field"><label>Quantity / Tokens</label><input type="number" id="meme-qty" placeholder="1000000" step="any" /></div>
+    <div class="field"><label>Blockchain</label>
       <select id="meme-chain">
         <option value="solana">Solana (low fee)</option>
         <option value="eth">Ethereum (ERC-20)</option>
@@ -323,17 +271,10 @@
     </div>
   </div>
   <div class="row">
-    <div class="field">
-      <label>Buy Date</label>
-      <input type="date" id="meme-buy-date" />
-    </div>
-    <div class="field">
-      <label>Sell Date</label>
-      <input type="date" id="meme-sell-date" />
-    </div>
+    <div class="field"><label>Buy Date</label><input type="date" id="meme-buy-date" /></div>
+    <div class="field"><label>Sell Date</label><input type="date" id="meme-sell-date" /></div>
   </div>
-  <div class="field">
-    <label>US Tax Filing Status</label>
+  <div class="field"><label>US Tax Filing Status</label>
     <select id="meme-status">
       <option value="single">Single</option>
       <option value="married_joint">Married Filing Jointly</option>
@@ -341,8 +282,7 @@
       <option value="head">Head of Household</option>
     </select>
   </div>
-  <div class="field">
-    <label>Estimated Annual Income (USD)</label>
+  <div class="field"><label>Estimated Annual Income (USD)</label>
     <select id="meme-income">
       <option value="0">$0 - $11,925 (0% LTCG)</option>
       <option value="15000">$11,926 - $48,475 (15% LTCG)</option>
@@ -350,43 +290,24 @@
       <option value="300000">$266,701+ (20% LTCG)</option>
     </select>
   </div>
-  <button class="btn" onclick="calcMeme()">Calculate Tax & Profit</button>
+  <button class="btn" onclick="calcMeme()">Calculate Tax &amp; Profit</button>
   <div class="result" id="meme-result"></div>
 </div>
 
 <!-- Airdrop Calculator -->
 <div class="calculator" id="airdrop-calc" style="display:none;">
   <div class="calc-title">Airdrop Tax Calculator</div>
-  <div class="field">
-    <label>Project / Airdrop Name</label>
-    <input type="text" id="air-coin" placeholder="e.g. UNI, ENS, Arbitrum" />
-  </div>
+  <div class="field"><label>Project / Airdrop Name</label><input type="text" id="air-coin" placeholder="e.g. UNI, ENS, Arbitrum" /></div>
   <div class="row">
-    <div class="field">
-      <label>Tokens Received</label>
-      <input type="number" id="air-qty" placeholder="1000" step="any" />
-    </div>
-    <div class="field">
-      <label>Token Price at Receipt (USD)</label>
-      <input type="number" id="air-receive-price" placeholder="1.23" step="any" />
-    </div>
+    <div class="field"><label>Tokens Received</label><input type="number" id="air-qty" placeholder="1000" step="any" /></div>
+    <div class="field"><label>Token Price at Receipt (USD)</label><input type="number" id="air-receive-price" placeholder="1.23" step="any" /></div>
   </div>
-  <div class="field">
-    <label>Receipt Date</label>
-    <input type="date" id="air-receive-date" />
-  </div>
+  <div class="field"><label>Receipt Date</label><input type="date" id="air-receive-date" /></div>
   <div class="row">
-    <div class="field">
-      <label>Sell Price (USD)</label>
-      <input type="number" id="air-sell-price" placeholder="2.50" step="any" />
-    </div>
-    <div class="field">
-      <label>Sell Date</label>
-      <input type="date" id="air-sell-date" />
-    </div>
+    <div class="field"><label>Sell Price (USD)</label><input type="number" id="air-sell-price" placeholder="2.50" step="any" /></div>
+    <div class="field"><label>Sell Date</label><input type="date" id="air-sell-date" /></div>
   </div>
-  <div class="field">
-    <label>US Tax Filing Status</label>
+  <div class="field"><label>US Tax Filing Status</label>
     <select id="air-status">
       <option value="single">Single</option>
       <option value="married_joint">Married Filing Jointly</option>
@@ -394,8 +315,7 @@
       <option value="head">Head of Household</option>
     </select>
   </div>
-  <div class="field">
-    <label>Estimated Annual Income (USD)</label>
+  <div class="field"><label>Estimated Annual Income (USD)</label>
     <select id="air-income">
       <option value="0">$0 - $11,925 (0% LTCG)</option>
       <option value="15000">$11,926 - $48,475 (15% LTCG)</option>
@@ -411,34 +331,20 @@
 <div class="calculator" id="capital-calc" style="display:none;">
   <div class="calc-title">Crypto Capital Gains Calculator</div>
   <div class="row">
-    <div class="field">
-      <label>Total Buy Cost (USD)</label>
-      <input type="number" id="cap-cost" placeholder="5000" step="any" />
-    </div>
-    <div class="field">
-      <label>Total Sell Proceeds (USD)</label>
-      <input type="number" id="cap-proceeds" placeholder="12000" step="any" />
-    </div>
+    <div class="field"><label>Total Buy Cost (USD)</label><input type="number" id="cap-cost" placeholder="5000" step="any" /></div>
+    <div class="field"><label>Total Sell Proceeds (USD)</label><input type="number" id="cap-proceeds" placeholder="12000" step="any" /></div>
   </div>
   <div class="row">
-    <div class="field">
-      <label>Buy Date</label>
-      <input type="date" id="cap-buy-date" />
-    </div>
-    <div class="field">
-      <label>Sell Date</label>
-      <input type="date" id="cap-sell-date" />
-    </div>
+    <div class="field"><label>Buy Date</label><input type="date" id="cap-buy-date" /></div>
+    <div class="field"><label>Sell Date</label><input type="date" id="cap-sell-date" /></div>
   </div>
-  <div class="field">
-    <label>US Tax Filing Status</label>
+  <div class="field"><label>US Tax Filing Status</label>
     <select id="cap-status">
       <option value="single">Single</option>
       <option value="married_joint">Married Filing Jointly</option>
     </select>
   </div>
-  <div class="field">
-    <label>Estimated Annual Income (USD)</label>
+  <div class="field"><label>Estimated Annual Income (USD)</label>
     <select id="cap-income">
       <option value="0">$0 - $11,925 (0% LTCG)</option>
       <option value="15000">$11,926 - $48,475 (15% LTCG)</option>
@@ -452,8 +358,8 @@
 
 <div class="upgrade-cta" id="upgrade-cta">
   <h3>🚀 Unlock Full Tax Reports</h3>
-  <p>Connect your wallet. Auto-import all transactions. Export IRS Form 8949. Supports 10+ chains.</p>
-  <button class="btn" onclick="openPayment('pro', 'monthly')">Upgrade to Pro — From $19/mo</button>
+  <p>Connect wallet · Auto-import transactions · Export IRS Form 8949 · Supports 10+ chains</p>
+  <button class="btn" onclick="scrollToPricing()">Upgrade to Pro — From $19/mo</button>
 </div>
 
 <div class="disclaimer">
@@ -461,7 +367,7 @@
   Always consult a qualified tax professional before filing. Not financial or tax advice.
 </div>
 
-<!-- Pricing Section -->
+<!-- ===== PRICING ===== -->
 <div class="calculator" id="pricing" style="max-width:620px;">
   <div class="calc-title">Pricing Plans</div>
   <div style="display:flex;gap:16px;flex-wrap:wrap;">
@@ -471,9 +377,9 @@
       <div style="font-size:30px;font-weight:800;color:var(--text);">$0</div>
       <div style="font-size:11px;color:var(--muted);margin:6px 0 16px;">Forever</div>
       <ul style="list-style:none;font-size:12px;color:var(--muted);line-height:2;text-align:left;">
-        <li>✅ 1 wallet</li>
-        <li>✅ 50 transactions</li>
         <li>✅ Basic calculators</li>
+        <li>✅ 1 wallet address</li>
+        <li>✅ Up to 50 txns</li>
         <li>❌ CSV export</li>
         <li>❌ PDF report</li>
       </ul>
@@ -487,12 +393,12 @@
       <div style="font-size:11px;color:var(--muted);margin:6px 0 16px;">or $149/year (save $79)</div>
       <ul style="list-style:none;font-size:12px;color:var(--muted);line-height:2;text-align:left;">
         <li>✅ 5 wallets</li>
-        <li>✅ Unlimited txns</li>
-        <li>✅ CSV export</li>
-        <li>✅ PDF tax report</li>
+        <li>✅ Unlimited transactions</li>
+        <li>✅ CSV / PDF export</li>
         <li>✅ TurboTax import</li>
+        <li>✅ Email support</li>
       </ul>
-      <button class="price-btn price-btn-pro" onclick="openPayment('pro','monthly')">Get Pro — $19/mo</button>
+      <button class="price-btn price-btn-pro" onclick="handlePurchase('pro','monthly')">Get Pro — $19/mo</button>
     </div>
     <!-- PREMIUM -->
     <div style="flex:1;min-width:160px;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:24px 20px;text-align:center;">
@@ -503,31 +409,55 @@
         <li>✅ Unlimited wallets</li>
         <li>✅ All chains (10+)</li>
         <li>✅ IRS Form 8949</li>
-        <li>✅ Priority support</li>
         <li>✅ API auto-sync</li>
+        <li>✅ Priority support</li>
       </ul>
-      <button class="price-btn price-btn-premium" onclick="openPayment('premium','monthly')">Get Premium — $49/mo</button>
+      <button class="price-btn price-btn-premium" onclick="handlePurchase('premium','monthly')">Get Premium — $49/mo</button>
     </div>
   </div>
-
-  <!-- Yearly options -->
   <div style="margin-top:24px;padding:18px;background:rgba(247,147,26,0.06);border:1px solid rgba(247,147,26,0.2);border-radius:10px;text-align:center;">
     <div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:12px;">💡 Save More with Yearly Plans</div>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-      <button class="btn" style="width:auto;padding:10px 24px;font-size:13px;" onclick="openPayment('pro','yearly')">Pro Yearly — $149/yr</button>
-      <button class="btn" style="width:auto;padding:10px 24px;font-size:13px;" onclick="openPayment('premium','yearly')">Premium Yearly — $399/yr</button>
+      <button class="btn" style="width:auto;padding:10px 24px;font-size:13px;" onclick="handlePurchase('pro','yearly')">Pro Yearly — $149/yr</button>
+      <button class="btn" style="width:auto;padding:10px 24px;font-size:13px;" onclick="handlePurchase('premium','yearly')">Premium Yearly — $399/yr</button>
     </div>
   </div>
 </div>
 
 <div class="disclaimer" style="margin-top:40px;">
-  💳 Accepting payments via Crypto — USDC (Solana), ETH, BTC
+  💳 Accepting payments via Crypto — USDC (Solana), ETH (BTC coming soon)
 </div>
 
 <footer>
-  © 2026 CryptoTaxCalc — Built for the degen community, by degens.<br>
+  &copy; 2026 CryptoTaxCalc — Built for the degen community, by degens.<br>
   <span style="font-size:10px;color:#666;">Not a tax professional. Use at your own risk.</span>
 </footer>
+
+<!-- ===== AUTH MODAL (Login / Register) ===== -->
+<div class="auth-overlay" id="auth-modal" onclick="closeAuth(event)">
+  <div class="auth-modal" onclick="event.stopPropagation()">
+    <button class="close-btn" onclick="closeAuth()">&times;</button>
+    <h3 id="auth-title">Create Account</h3>
+    <div class="sub" id="auth-sub">Sign up to save calculations & unlock premium features</div>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="field">
+      <label>Email Address</label>
+      <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" />
+    </div>
+    <div class="field" id="auth-name-field">
+      <label>Display Name</label>
+      <input type="text" id="auth-name" placeholder="CryptoDegen" autocomplete="name" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="auth-pass" placeholder="Min 6 characters" autocomplete="new-password" />
+    </div>
+    <button class="auth-btn auth-primary" id="auth-submit-btn" onclick="handleAuthSubmit()">Create Free Account</button>
+    <div class="auth-switch" id="auth-switch-text">
+      Already have an account? <a onclick="switchAuthMode('login')">Log In</a>
+    </div>
+  </div>
+</div>
 
 <!-- ===== PAYMENT MODAL ===== -->
 <div class="modal-overlay" id="payment-modal" onclick="closeModal(event)">
@@ -538,12 +468,18 @@
     <div class="plan-price" id="modal-plan-price">$19<span>/month</span></div>
     <div class="plan-desc" id="modal-plan-desc">5 wallets · CSV export · PDF report</div>
 
+    <!-- Logged-in user info -->
+    <div class="user-info-bar" id="payment-user-info">
+      <div class="label">Account</div>
+      <div class="value" id="payment-user-email"></div>
+    </div>
+
     <!-- Chain selector -->
     <div class="chain-select">
       <label>Pay with:</label>
       <div class="chain-btns">
-        <div class="chain-btn active" data-chain="solana" onclick="selectChain(this)">💜 USDC<br><span style="font-size:10px;color:var(--muted);font-weight:400;">Solana Network — Recommended</span></div>
-        <div class="chain-btn" data-chain="eth" onclick="selectChain(this)">⬡ ETH / USDC<br><span style="font-size:10px;color:var(--muted);font-weight:400;">Ethereum (ERC-20)</span></div>
+        <div class="chain-btn active" data-chain="solana" onclick="selectChain(this)">💜 USDC<br><span style="font-size:10px;color:var(--muted);font-weight:400;">Solana — Recommended</span></div>
+        <div class="chain-btn" data-chain="eth" onclick="selectChain(this)">⬡ ETH<br><span style="font-size:10px;color:var(--muted);font-weight:400;">Ethereum Network</span></div>
         <div class="chain-btn" data-chain="btc" onclick="selectChain(this)">₿ BTC<br><span style="font-size:10px;color:var(--muted);font-weight:400;">Bitcoin Network</span></div>
       </div>
     </div>
@@ -551,62 +487,302 @@
     <!-- Wallet address -->
     <div class="wallet-label">Send payment to this address:</div>
     <div class="wallet-addr" id="modal-wallet-addr" onclick="copyAddr()">62yqoLb9G1wXcbzJXG6QDhTkVhJUKLBbWR3Q2dJ3pxrD</div>
-    <div class="copy-ok" id="copy-ok">✅ Address copied! Paste in your wallet.</div>
+    <div class="copy-ok" id="copy-ok">✅ Copied! Paste in your wallet.</div>
 
     <!-- Amount -->
-    <div class="wallet-label" style="margin-top:12px;">Amount to send:</div>
-    <div class="wallet-addr" style="color:var(--accent);font-size:16px;font-weight:700;" id="modal-amount">$19.00</div>
+    <div class="amount-display">
+      <div class="amt-label">Amount to send</div>
+      <div class="amt-value" id="modal-amount">$19.00</div>
+    </div>
 
     <!-- Steps -->
     <div class="steps">
       <div class="step">Copy the wallet address above</div>
-      <div class="step">Open your crypto wallet (Phantom, MetaMask, etc.)</div>
-      <div class="step">Send exact amount to the address</div>
-      <div class="step">Email TXID to <strong style="color:var(--accent);">cryptotaxcalc@proton.me</strong></div>
-      <div class="step">Account activated within 24 hours ⚡</div>
+      <div class="step">Open your wallet app (Phantom, MetaMask, etc.)</div>
+      <div class="step">Send the exact amount shown above</div>
+    </div>
+
+    <!-- TXID submission -->
+    <div class="txid-section">
+      <div class="wallet-label">After sending, paste your Transaction ID (TXID):</div>
+      <input type="text" class="txid-input" id="txid-input" placeholder="e.g. 0xabc123... or tx hash from Solana explorer" />
+      <button class="txid-submit" onclick="submitTXID()">Submit TXID for Instant Activation ⚡</button>
+      <div class="txid-status" id="txid-status"></div>
     </div>
   </div>
 </div>
 
+<!-- ===== DASHBOARD MODAL ===== -->
+<div class="dash-overlay" id="dashboard-modal" onclick="closeDash(event)">
+  <div class="dash-modal" onclick="event.stopPropagation()">
+    <button class="close-btn" onclick="closeDash()">&times;</button>
+    <h3>📊 My Dashboard</h3>
+    <div class="sub" id="dash-email-display"></div>
+
+    <div class="stat-card">
+      <div class="stat-label">Current Plan</div>
+      <div class="stat-value" id="dash-plan-value">Free Plan</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Member Since</div>
+      <div class="stat-value" id="dash-since-value">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Account Email</div>
+      <div class="stat-value" style="font-size:14px;font-weight:400;" id="dash-email-value"></div>
+    </div>
+
+    <div class="payment-history">
+      <h4>Payment History</h4>
+      <div id="payments-list">
+        <div style="font-size:12px;color:var(--muted);padding:12px 0;text-align:center;">No payments yet</div>
+      </div>
+    </div>
+
+    <button class="btn btn-secondary" style="margin-top:16px;" onclick="closeDash(); scrollToPricing();">Upgrade My Plan</button>
+  </div>
+</div>
+
+
 <script>
+// ============================================================
+//  USER SYSTEM (localStorage-based)
+//  Stores: users[], currentUser
+// ============================================================
+const DB_KEY = 'ctc_users';
+const CUR_KEY = 'ctc_current';
+
+function getUsers() { try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; } catch(e) { return []; } }
+function saveUsers(u) { localStorage.setItem(DB_KEY, JSON.stringify(u)); }
+function getUser() { try { return JSON.parse(localStorage.getItem(CUR_KEY)); } catch(e) { return null; } }
+function setUser(u) { localStorage.setItem(CUR_KEY, JSON.stringify(u)); }
+function clearUser() { localStorage.removeItem(CUR_KEY); }
+
+// Check login on page load
+function checkAuth() {
+  const u = getUser();
+  if (u && u.email) {
+    showLoggedInState(u);
+  } else {
+    showGuestState();
+  }
+}
+
+function showLoggedInState(u) {
+  document.getElementById('nav-guest').style.display = 'none';
+  document.getElementById('nav-user').style.display = 'block';
+  document.getElementById('user-avatar-letter').textContent = (u.name || u.email || 'U').charAt(0).toUpperCase();
+  document.getElementById('dropdown-email').textContent = u.email;
+
+  // Update plan badge
+  const badge = document.getElementById('dropdown-plan');
+  const plan = u.plan || 'free';
+  badge.className = 'plan-badge plan-' + plan;
+  badge.textContent = plan === 'pro' ? 'Pro ✨' : plan === 'premium' ? 'Premium 👑' : 'Free Plan';
+
+  // Update pricing buttons if already subscribed
+  updatePricingButtons(plan);
+}
+
+function showGuestState() {
+  document.getElementById('nav-guest').style.display = 'flex';
+  document.getElementById('nav-user').style.display = 'none';
+}
+
+function toggleDropdown() {
+  document.getElementById('user-dropdown').classList.toggle('show');
+}
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  const menu = document.querySelector('.user-menu');
+  if (menu && !menu.contains(e.target)) {
+    document.getElementById('user-dropdown').classList.remove('show');
+  }
+});
+
+function logout() {
+  clearUser();
+  showGuestState();
+  document.getElementById('user-dropdown').classList.remove('show');
+  location.reload();
+}
+
+function updatePricingButtons(plan) {
+  // If user already has pro/premium, change the button text
+  // This is cosmetic only since we don't have real backend yet
+}
+
+// ============================================================
+//  AUTH MODAL
+// ============================================================
+let authMode = 'signup'; // 'signup' or 'login'
+
+function openAuth(mode) {
+  authMode = mode;
+  switchAuthMode(mode);
+  document.getElementById('auth-modal').classList.add('show');
+  document.getElementById('auth-email').focus();
+}
+
+function closeAuth(e) {
+  if (!e || e.target === e.currentTarget || e.target.classList.contains('close-btn')) {
+    document.getElementById('auth-modal').classList.remove('show');
+    document.getElementById('auth-error').classList.remove('show');
+  }
+}
+
+function switchAuthMode(mode) {
+  authMode = mode;
+  const title = document.getElementById('auth-title');
+  const sub = document.getElementById('auth-sub');
+  const btn = document.getElementById('auth-submit-btn');
+  const nameField = document.getElementById('auth-name-field');
+  const switchText = document.getElementById('auth-switch-text');
+
+  if (mode === 'signup') {
+    title.textContent = 'Create Account';
+    sub.textContent = 'Sign up to save calculations & unlock premium features';
+    btn.textContent = 'Create Free Account';
+    nameField.style.display = '';
+    switchText.innerHTML = 'Already have an account? <a onclick="switchAuthMode(\'login\')">Log In</a>';
+  } else {
+    title.textContent = 'Welcome Back';
+    sub.textContent = 'Log in to access your account';
+    btn.textContent = 'Log In';
+    nameField.style.display = 'none';
+    switchText.innerHTML = "Don't have an account? <a onclick=\"switchAuthMode('signup')\">Sign Up Free</a>";
+  }
+  document.getElementById('auth-email').value = '';
+  document.getElementById('auth-pass').value = '';
+  document.getElementById('auth-name').value = '';
+  document.getElementById('auth-error').classList.remove('show');
+}
+
+function handleAuthSubmit() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-pass').value;
+  const name = document.getElementById('auth-name').value.trim();
+  const errEl = document.getElementById('auth-error');
+
+  // Validation
+  if (!email || !email.includes('@')) { errEl.textContent = 'Please enter a valid email address'; errEl.classList.add('show'); return; }
+  if (!pass || pass.length < 6) { errEl.textContent = 'Password must be at least 6 characters'; errEl.classList.add('show'); return; }
+
+  const users = getUsers();
+
+  if (authMode === 'signup') {
+    if (!name || name.length < 2) { errEl.textContent = 'Please enter a display name (min 2 chars)'; errEl.classList.add('show'); return; }
+    // Check if email exists
+    if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+      errEl.textContent = 'This email is already registered. Log in instead.'; errEl.classList.add('show'); return;
+    }
+    // Create user
+    const newUser = {
+      email: email,
+      name: name,
+      pass: btoa(pass), // simple obfuscation (not secure, but this is frontend-only)
+      plan: 'free',
+      created: new Date().toISOString(),
+      payments: []
+    };
+    users.push(newUser);
+    saveUsers(users);
+    setUser(newUser);
+
+    errEl.classList.remove('show');
+    closeAuth();
+    showLoggedInState(newUser);
+    alert('✅ Account created! Welcome to CryptoTaxCalc, ' + name + '!');
+
+  } else {
+    // Login
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (!user) { errEl.textContent = 'No account found with this email. Sign up first.'; errEl.classList.add('show'); return; }
+    if (atob(user.pass) !== pass) { errEl.textContent = 'Incorrect password. Try again.'; errEl.classList.add('show'); return; }
+    setUser(user);
+    errEl.classList.remove('show');
+    closeAuth();
+    showLoggedInState(user);
+    alert('Welcome back, ' + (user.name || 'there') + '! 👋');
+  }
+}
+
+
+// ============================================================
+//  PURCHASE HANDLER
+// ============================================================
+function handlePurchase(plan, billing) {
+  const u = getUser();
+  if (!u) {
+    // Not logged in → open auth, then redirect to purchase after login
+    alert('Please create a free account first (takes 10 seconds). This links your purchase to your account.');
+    openAuth('signup');
+    // Store pending purchase intent
+    sessionStorage.setItem('pending_purchase', JSON.stringify({ plan, billing }));
+    return;
+  }
+
+  // Already logged in → open payment modal
+  openPayment(plan, billing);
+}
+
+// Override sessionStorage intent after signup
+const origSetUser = setUser;
+setUser = function(u) {
+  origSetUser(u);
+  const pending = sessionStorage.getItem('pending_purchase');
+  if (pending) {
+    sessionStorage.removeItem('pending_purchase');
+    setTimeout(() => {
+      const { plan, billing } = JSON.parse(pending);
+      openPayment(plan, billing);
+    }, 500);
+  }
+};
+
+
 // ============================================================
 //  WALLET ADDRESSES (your wallets)
 // ============================================================
 const WALLETS = {
-  solana:  '62yqoLb9G1wXcbzJXG6QDhTkVhJUKLBbWR3Q2dJ3pxrD',
-  eth:     '0x9749eed9fe2027697c755d906c1ae70af44e9a92',
-  btc:     'bc1padmmv0vfqlss90utr5vl4lg8wn6lczfevnllluv7d60934weaxyqep4yev'
+  solana: '62yqoLb9G1wXcbzJXG6QDhTkVhJUKLBbWR3Q2dJ3pxrD',
+  eth:    '0x9749eed9fe2027697c755d906c1ae70af44e9a92',
+  btc:    'bc1padmmv0vfqlss90utr5vl4lg8wn6lczfevnllluv7d60934weaxyqep4yev'
 };
 
-// PRICING DATA
 const PLANS = {
-  pro: {
-    monthly: { price: 19,   label: '$19/month',     desc: '5 wallets · CSV export · PDF report' },
-    yearly:  { price: 149,  label: '$149/year',     desc: '5 wallets · CSV export · PDF report · Save $79' }
-  },
-  premium: {
-    monthly: { price: 49,   label: '$49/month',     desc: 'Unlimited wallets · All chains · Form 8949' },
-    yearly:  { price: 399,  label: '$399/year',     desc: 'Unlimited wallets · All chains · Save $189' }
-  }
+  pro:     { monthly: { price: 19,  label: '$19/month',   desc: '5 wallets · CSV/PDF export · TurboTax import' },
+              yearly:  { price: 149, label: '$149/year',   desc: '5 wallets · Save $79' }},
+  premium: { monthly: { price: 49,  label: '$49/month',   desc: 'Unlimited wallets · All chains · IRS 8949' },
+              yearly:  { price: 399, label: '$399/year',   desc: 'Unlimited wallets · Save $189' }}
 };
 
 let currentChain = 'solana';
 
-// ============================================================
-//  OPEN PAYMENT MODAL
-// ============================================================
 function openPayment(plan, billing) {
   const p = PLANS[plan][billing];
+  const u = getUser();
+
   document.getElementById('modal-plan-name').textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
   document.getElementById('modal-plan-price').innerHTML = p.label;
   document.getElementById('modal-plan-desc').textContent = p.desc;
   document.getElementById('modal-amount').textContent = '$' + p.price.toFixed(2);
 
-  // Reset to default chain
+  // Show logged-in user info
+  if (u) {
+    document.getElementById('payment-user-email').textContent = u.email + (u.name ? ' (' + u.name + ')' : '');
+    document.getElementById('payment-user-info').style.display = 'block';
+  }
+
   currentChain = 'solana';
   document.querySelectorAll('.chain-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.chain-btn[data-chain="solana"]').classList.add('active');
   updateWalletAddress();
+
+  // Clear previous TXID input
+  document.getElementById('txid-input').value = '';
+  document.getElementById('txid-status').className = 'txid-status';
+  document.getElementById('txid-status').textContent = '';
 
   document.getElementById('payment-modal').classList.add('show');
   document.getElementById('copy-ok').classList.remove('show');
@@ -618,9 +794,6 @@ function closeModal(e) {
   }
 }
 
-// ============================================================
-//  CHAIN SELECTOR
-// ============================================================
 function selectChain(el) {
   document.querySelectorAll('.chain-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
@@ -633,15 +806,11 @@ function updateWalletAddress() {
   document.getElementById('copy-ok').classList.remove('show');
 }
 
-// ============================================================
-//  COPY ADDRESS
-// ============================================================
 function copyAddr() {
   const addr = WALLETS[currentChain];
   navigator.clipboard.writeText(addr).then(() => {
     document.getElementById('copy-ok').classList.add('show');
   }).catch(() => {
-    // Fallback for older browsers
     const ta = document.createElement('textarea');
     ta.value = addr;
     document.body.appendChild(ta);
@@ -652,23 +821,122 @@ function copyAddr() {
   });
 }
 
-// Close modal on Escape key
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeModal();
+// Submit TXID — saves to user's account
+function submitTXID() {
+  const txid = document.getElementById('txid-input').value.trim();
+  const statusEl = document.getElementById('txid-status');
+
+  if (!txid || txid.length < 10) {
+    statusEl.textContent = '⚠️ Please enter a valid Transaction ID (TXID)';
+    statusEl.className = 'txid-status err';
+    return;
+  }
+
+  const u = getUser();
+  if (!u) {
+    statusEl.textContent = '⚠ Please log in first';
+    statusEl.className = 'txid-status err';
+    return;
+  }
+
+  // Get current plan info from the modal title
+  const planName = document.getElementById('modal-plan-name').textContent.toLowerCase();
+  const amountStr = document.getElementById('modal-amount').textContent;
+  const chainLabel = currentChain.toUpperCase();
+
+  // Record the payment
+  const paymentRecord = {
+    txid: txid,
+    plan: planName,
+    amount: amountStr,
+    chain: chainLabel,
+    date: new Date().toISOString(),
+    status: 'pending' // You'll manually verify and mark as 'active'
+  };
+
+  // Add to user's payments
+  const users = getUsers();
+  const idx = users.findIndex(x => x.email === u.email);
+  if (idx >= 0) {
+    if (!users[idx].payments) users[idx].payments = [];
+    users[idx].payments.push(paymentRecord);
+    // Upgrade plan immediately (optimistic — you can revert if not paid)
+    users[idx].plan = planName;
+    saveUsers(users);
+    // Update current session
+    users[idx].payments = users[idx].payments; // keep reference
+    setUser(users[idx]);
+    showLoggedInState(users[idx]);
+  }
+
+  statusEl.innerHTML = '✅ TXID submitted! Your account will be activated within minutes.<br><small>We\'ll verify your payment and send confirmation to ' + u.email + '</small>';
+  statusEl.className = 'txid-status ok';
+}
+
+// Close modals on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeModal();
+    closeAuth();
+    closeDash();
+  }
 });
 
-// ============================================================
-//  US Tax Rate Tables (2025)
-// ============================================================
-const ST_RATE = {
-  single:      [0.10, 0.12, 0.22, 0.24, 0.32, 0.35, 0.37],
-  singleBrackets: [0, 11925, 48475, 103350, 197300, 250525, 626350],
-  married_joint:      [0.10, 0.12, 0.22, 0.24, 0.32, 0.35, 0.37],
-  married_jointBrackets: [0, 23850, 96950, 206700, 394600, 501050, 751600],
-  head:      [0.10, 0.12, 0.22, 0.24, 0.32, 0.35, 0.37],
-  headBrackets: [0, 17000, 64850, 100500, 191150, 243700, 609350],
-};
 
+// ============================================================
+//  DASHBOARD
+// ============================================================
+function openDashboard() {
+  const u = getUser();
+  if (!u) { openAuth('login'); return; }
+
+  document.getElementById('dash-email-display').textContent = 'Manage your account';
+  document.getElementById('dash-email-value').textContent = u.email;
+  document.getElementById('dash-since-value').textContent = u.created ? new Date(u.created).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) : '—';
+
+  // Plan display
+  const planVal = document.getElementById('dash-plan-value');
+  const plan = u.plan || 'free';
+  if (plan === 'pro') { planVal.innerHTML = '<span style="color:var(--accent)">Pro ✨</span> — $19/month'; }
+  else if (plan === 'premium') { planVal.innerHTML = '<span style="color:#ffd700">Premium 👑</span> — $49/month'; }
+  else { planVal.textContent = 'Free Plan'; }
+
+  // Payment history
+  const listEl = document.getElementById('payments-list');
+  const payments = u.payments || [];
+  if (payments.length > 0) {
+    listEl.innerHTML = payments.map(function(p) {
+      const d = new Date(p.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+      const stCls = p.status === 'active' ? 'pay-status-active' : 'pay-status-pending';
+      const stTxt = p.status === 'active' ? 'Active ✓' : 'Pending Review';
+      return '<div class="pay-row"><span>' + p.plan + ' — ' + p.amount + ' (' + p.chain + ')</span><span class="' + stCls + '">' + stTxt + '</span></div>';
+    }).join('');
+  } else {
+    listEl.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:12px 0;text-align:center;">No payments yet</div>';
+  }
+
+  document.getElementById('dashboard-modal').classList.add('show');
+  document.getElementById('user-dropdown').classList.remove('show');
+}
+
+function closeDash(e) {
+  if (!e || e.target === e.currentTarget || e.target.classList.contains('close-btn')) {
+    document.getElementById('dashboard-modal').classList.remove('show');
+  }
+}
+
+
+// ============================================================
+//  SCROLL HELPERS
+// ============================================================
+function scrollToPricing() {
+  document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
+}
+
+
+// ============================================================
+//  US TAX RATE TABLES (2025)
+// ============================================================
 function getLTCGRate(income) {
   if (income <= 11925) return 0.00;
   if (income <= 48475) return 0.15;
@@ -676,23 +944,9 @@ function getLTCGRate(income) {
   return 0.20;
 }
 
-function calcIncomeTax(income, status) {
-  const brackets = [
-    [11925, 0.10], [48475, 0.12], [103350, 0.22], [197300, 0.24],
-    [250525, 0.32], [626350, 0.35], [Infinity, 0.37]
-  ];
-  let tax = 0, prev = 0;
-  for (const [cap, rate] of brackets) {
-    if (income <= prev) break;
-    const portion = Math.min(income, cap) - prev;
-    if (portion > 0) tax += portion * rate;
-    prev = cap;
-  }
-  return tax;
-}
 
 // ============================================================
-//  Tab Switching
+//  TAB SWITCHING
 // ============================================================
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -711,195 +965,164 @@ function switchTab(tab) {
   }
 }
 
+
 // ============================================================
-//  Gas Fee Estimates (USD)
+//  GAS FEES
 // ============================================================
 const GAS_FEE = { solana: 0.01, eth: 5.0, base: 0.10, bsc: 0.20, arb: 0.30 };
 
+
 // ============================================================
-//  Meme Coin Calculator
+//  MEME COIN CALCULATOR
 // ============================================================
 function calcMeme() {
-  const buyPrice = parseFloat(document.getElementById('meme-buy').value) || 0;
+  const buyPrice  = parseFloat(document.getElementById('meme-buy').value)  || 0;
   const sellPrice = parseFloat(document.getElementById('meme-sell').value) || 0;
-  const qty = parseFloat(document.getElementById('meme-qty').value) || 0;
-  const chain = document.getElementById('meme-chain').value;
-  const buyDate = new Date(document.getElementById('meme-buy-date').value || '2025-01-01');
-  const sellDate = new Date(document.getElementById('meme-sell-date').value || '2025-06-01');
-  const income = parseInt(document.getElementById('meme-income').value) || 0;
+  const qty       = parseFloat(document.getElementById('meme-qty').value)    || 0;
+  const chain     = document.getElementById('meme-chain').value;
+  const buyDate   = new Date(document.getElementById('meme-buy-date').value  || '2025-01-01');
+  const sellDate  = new Date(document.getElementById('meme-sell-date').value || '2025-06-01');
+  const income    = parseInt(document.getElementById('meme-income').value)    || 0;
 
-  if (buyPrice <= 0 || sellPrice <= 0 || qty <= 0) {
-    alert('Please fill in buy price, sell price, and quantity.');
-    return;
-  }
+  if (buyPrice <= 0 || sellPrice <= 0 || qty <= 0) { alert('Please fill in buy price, sell price, and quantity.'); return; }
 
-  const buyCost = buyPrice * qty;
+  const buyCost     = buyPrice * qty;
   const sellProceeds = sellPrice * qty;
-  const grossProfit = sellProceeds - buyCost;
-  const gasFee = GAS_FEE[chain] || 0.20;
-  const netProfit = grossProfit - gasFee;
-
-  const msPerDay = 86400000;
-  const holdingDays = Math.round((sellDate - buyDate) / msPerDay);
-  const isLongTerm = holdingDays > 365;
+  const grossProfit  = sellProceeds - buyCost;
+  const gasFee       = GAS_FEE[chain] || 0.20;
+  const netProfit    = grossProfit - gasFee;
+  const holdingDays  = Math.round((sellDate - buyDate) / 86400000);
+  const isLongTerm   = holdingDays > 365;
 
   let taxRate, taxOwed;
-  if (isLongTerm) {
-    taxRate = getLTCGRate(income);
-    taxOwed = Math.max(0, netProfit) * taxRate;
-  } else {
-    taxRate = 0.22;
-    taxOwed = Math.max(0, netProfit) * taxRate;
-  }
+  if (isLongTerm) { taxRate = getLTCGRate(income); taxOwed = Math.max(0, netProfit) * taxRate; }
+  else            { taxRate = 0.22;             taxOwed = Math.max(0, netProfit) * taxRate; }
 
-  const afterTax = netProfit - taxOwed;
-  const profitClass = netProfit >= 0 ? 'profit' : 'loss';
-  const afterTaxClass = afterTax >= 0 ? 'profit' : 'loss';
+  const afterTax     = netProfit - taxOwed;
+  const profitClass  = netProfit >= 0 ? 'profit' : 'loss';
+  const afterClass   = afterTax >= 0 ? 'profit' : 'loss';
 
-  document.getElementById('meme-result').innerHTML = `
-    <h3>📊 Calculation Result</h3>
-    <div class="result-row"><span class="label">Buy Cost</span><span class="value">$${fmt(buyCost)}</span></div>
-    <div class="result-row"><span class="label">Sell Proceeds</span><span class="value">$${fmt(sellProceeds)}</span></div>
-    <div class="result-row"><span class="label">Gas Fee (${chain.toUpperCase()})</span><span class="value">$${fmt(gasFee)}</span></div>
-    <div class="result-row"><span class="label">Gross Profit</span><span class="value ${profitClass}">$${fmt(grossProfit)}</span></div>
-    <div class="result-row"><span class="label">Holding Period</span><span class="value">${holdingDays} days (${isLongTerm ? 'Long-term' : 'Short-term'})</span></div>
-    <div class="result-row"><span class="label">Tax Rate (${isLongTerm ? 'LTCG' : 'STCG'})</span><span class="value tax">${(taxRate * 100).toFixed(0)}%</span></div>
-    <div class="result-row"><span class="label">Est. Tax Owed</span><span class="value tax">$${fmt(taxOwed)}</span></div>
-    <div class="result-row" style="border-top:2px solid var(--accent);padding-top:10px;margin-top:4px;">
-      <span class="label" style="font-weight:700;">After-Tax Profit</span>
-      <span class="value ${afterTaxClass}" style="font-size:16px;">$${fmt(afterTax)}</span>
-    </div>
-    <div style="margin-top:12px;font-size:11px;color:var(--muted);">
-      ⚠️ ${isLongTerm ? 'Long-term capital gains taxed at preferential rates (0%/15%/20%).' : 'Short-term capital gains taxed as ordinary income (up to 37%).'}
-    </div>
-  `;
+  document.getElementById('meme-result').innerHTML =
+    '<h3>📊 Calculation Result</h3>'
+    + '<div class="result-row"><span class="label">Buy Cost</span><span class="value">$'+fmt(buyCost)+'</span></div>'
+    + '<div class="result-row"><span class="label">Sell Proceeds</span><span class="value">$'+fmt(sellProceeds)+'</span></div>'
+    + '<div class="result-row"><span class="label">Gas Fee ('+chain.toUpperCase()+')</span><span class="value">$'+fmt(gasFee)+'</span></div>'
+    + '<div class="result-row"><span class="label">Gross Profit</span><span class="value '+profitClass+'">$'+fmt(grossProfit)+'</span></div>'
+    + '<div class="result-row"><span class="label">Holding Period</span><span class="value">'+holdingDays+' days ('+(isLongTerm?'Long-term':'Short-term')+')</span></div>'
+    + '<div class="result-row"><span class="label">Tax Rate ('+(isLongTerm?'LTCG':'STCG')+')</span><span class="value tax">'+(taxRate*100).toFixed(0)+'%</span></div>'
+    + '<div class="result-row"><span class="label">Est. Tax Owed</span><span class="value tax">$'+fmt(taxOwed)+'</span></div>'
+    + '<div class="result-row" style="border-top:2px solid var(--accent);padding-top:10px;margin-top:4px;"><span class="label" style="font-weight:700;">After-Tax Profit</span><span class="value '+afterClass+'" style="font-size:16px;">$'+fmt(afterTax)+'</span></div>'
+    + '<div style="margin-top:12px;font-size:11px;color:var(--muted);">⚠️ '+(isLongTerm?'Long-term capital gains taxed at preferential rates (0%/15%/20%).':'Short-term capital gains taxed as ordinary income (up to 37%).')+'</div>';
+
   document.getElementById('meme-result').classList.add('show');
   document.getElementById('upgrade-cta').classList.add('show');
 }
 
+
 // ============================================================
-//  Airdrop Calculator
+//  AIRDROP CALCULATOR
 // ============================================================
 function calcAirdrop() {
-  const qty = parseFloat(document.getElementById('air-qty').value) || 0;
+  const qty          = parseFloat(document.getElementById('air-qty').value)           || 0;
   const receivePrice = parseFloat(document.getElementById('air-receive-price').value) || 0;
-  const sellPrice = parseFloat(document.getElementById('air-sell-price').value) || 0;
-  const receiveDate = new Date(document.getElementById('air-air-date').value || '2024-09-01');
-  const sellDate = new Date(document.getElementById('air-sell-date').value || '2025-03-01');
-  const income = parseInt(document.getElementById('air-income').value) || 0;
+  const sellPrice    = parseFloat(document.getElementById('air-sell-price').value)    || 0;
+  const receiveDate  = new Date(document.getElementById('air-receive-date').value     || '2024-09-01');
+  const sellDate     = new Date(document.getElementById('air-sell-date').value        || '2025-03-01');
+  const income       = parseInt(document.getElementById('air-income').value)           || 0;
 
-  if (qty <= 0 || receivePrice <= 0 || sellPrice <= 0) {
-    alert('Please fill in all fields.');
-    return;
-  }
+  if (qty <= 0 || receivePrice <= 0 || sellPrice <= 0) { alert('Please fill in all fields.'); return; }
 
   const ordinaryIncome = qty * receivePrice;
-  const costBasis = ordinaryIncome;
-  const sellProceeds = qty * sellPrice;
-  const capitalGain = sellProceeds - costBasis;
-
-  const msPerDay = 86400000;
-  const holdingDays = Math.round((sellDate - receiveDate) / msPerDay);
-  const isLongTerm = holdingDays > 365;
+  const costBasis      = ordinaryIncome;
+  const sellProceeds   = qty * sellPrice;
+  const capitalGain    = sellProceeds - costBasis;
+  const holdingDays    = Math.round((sellDate - receiveDate) / 86400000);
+  const isLongTerm     = holdingDays > 365;
 
   let taxRate, capitalTax;
-  if (isLongTerm) {
-    taxRate = getLTCGRate(income);
-    capitalTax = Math.max(0, capitalGain) * taxRate;
-  } else {
-    taxRate = 0.22;
-    capitalTax = Math.max(0, capitalGain) * taxRate;
-  }
+  if (isLongTerm) { taxRate = getLTCGRate(income); capitalTax = Math.max(0, capitalGain) * taxRate; }
+  else            { taxRate = 0.22;             capitalTax = Math.max(0, capitalGain) * taxRate; }
 
   const ordinaryTax = ordinaryIncome * 0.22;
-  const totalTax = ordinaryTax + capitalTax;
+  const totalTax    = ordinaryTax + capitalTax;
   const netProceeds = sellProceeds - ordinaryTax - capitalTax;
 
   const profitClass = capitalGain >= 0 ? 'profit' : 'loss';
 
-  document.getElementById('air-result').innerHTML = `
-    <h3>🪂 Airdrop Tax Result</h3>
-    <div class="result-row"><span class="label">Tokens Received</span><span class="value">${fmt(qty, 0)} tokens</span></div>
-    <div class="result-row"><span class="label">Value at Receipt (Ordinary Income)</span><span class="value tax">$${fmt(ordinaryIncome)}</span></div>
-    <div class="result-row"><span class="label">Sell Proceeds</span><span class="value">$${fmt(sellProceeds)}</span></div>
-    <div class="result-row"><span class="label">Capital Gain/Loss</span><span class="value ${profitClass}">$${fmt(capitalGain)}</span></div>
-    <div class="result-row"><span class="label">Holding Period (after receipt)</span><span class="value">${holdingDays} days (${isLongTerm ? 'Long-term' : 'Short-term'})</span></div>
-    <div class="result-row"><span class="label">Tax on Airdrop (Ordinary)</span><span class="value tax">~$${fmt(ordinaryTax)}</span></div>
-    <div class="result-row"><span class="label">Tax on Capital Gain</span><span class="value tax">~$${fmt(capitalTax)}</span></div>
-    <div class="result-row"><span class="label">Total Tax Owed</span><span class="value tax">$${fmt(totalTax)}</span></div>
-    <div class="result-row" style="border-top:2px solid var(--accent);padding-top:10px;margin-top:4px;">
-      <span class="label" style="font-weight:700;">Net After Tax</span>
-      <span class="value ${netProceeds >= 0 ? 'profit' : 'loss'}" style="font-size:16px;">$${fmt(netProceeds)}</span>
-    </div>
-    <div style="margin-top:12px;font-size:11px;color:var(--muted);">
-      ⚠️ Airdrops are taxed as ordinary income at receipt (FMV). Subsequent gain/loss is capital gain.<br>
-      This is a simplified estimate. Consult a tax professional.
-    </div>
-  `;
+  document.getElementById('air-result').innerHTML =
+    '<h3>🪂 Airdrop Tax Result</h3>'
+    + '<div class="result-row"><span class="label">Tokens Received</span><span class="value">'+fmt(qty,0)+' tokens</span></div>'
+    + '<div class="result-row"><span class="label">Value at Receipt (Ordinary Income)</span><span class="value tax">$'+fmt(ordinaryIncome)+'</span></div>'
+    + '<div class="result-row"><span class="label">Sell Proceeds</span><span class="value">$'+fmt(sellProceeds)+'</span></div>'
+    + '<div class="result-row"><span class="label">Capital Gain/Loss</span><span class="value '+profitClass+'">$'+fmt(capitalGain)+'</span></div>'
+    + '<div class="result-row"><span class="label">Holding Period (after receipt)</span><span class="value">'+holdingDays+' days ('+(isLongTerm?'Long-term':'Short-term')+')</span></div>'
+    + '<div class="result-row"><span class="label">Tax on Airdrop (Ordinary)</span><span class="value tax">~$'+fmt(ordinaryTax)+'</span></div>'
+    + '<div class="result-row"><span class="label">Tax on Capital Gain</span><span class="value tax">~$'+fmt(capitalTax)+'</span></div>'
+    + '<div class="result-row"><span class="label">Total Tax Owed</span><span class="value tax">$'+fmt(totalTax)+'</span></div>'
+    + '<div class="result-row" style="border-top:2px solid var(--accent);padding-top:10px;margin-top:4px;"><span class="label" style="font-weight:700;">Net After Tax</span><span class="value '+(netProceeds>=0?'profit':'loss')+'" style="font-size:16px;">$'+fmt(netProceeds)+'</span></div>'
+    + '<div style="margin-top:12px;font-size:11px;color:var(--muted);">⚠️ Airdrops are taxed as ordinary income at receipt (FMV). Subsequent gain/loss is capital gain.<br>This is a simplified estimate. Consult a tax professional.</div>';
+
   document.getElementById('air-result').classList.add('show');
   document.getElementById('upgrade-cta').classList.add('show');
 }
 
+
 // ============================================================
-//  Capital Gains Calculator
+//  CAPITAL GAINS CALCULATOR
 // ============================================================
 function calcCapital() {
-  const cost = parseFloat(document.getElementById('cap-cost').value) || 0;
-  const proceeds = parseFloat(document.getElementById('cap-proceeds').value) || 0;
-  const buyDate = new Date(document.getElementById('cap-buy-date').value || '2024-01-01');
-  const sellDate = new Date(document.getElementById('cap-sell-date').value || '2025-06-01');
-  const income = parseInt(document.getElementById('cap-income').value) || 0;
+  const cost      = parseFloat(document.getElementById('cap-cost').value)     || 0;
+  const proceeds  = parseFloat(document.getElementById('cap-proceeds').value)|| 0;
+  const buyDate   = new Date(document.getElementById('cap-buy-date').value  || '2024-01-01');
+  const sellDate  = new Date(document.getElementById('cap-sell-date').value || '2025-06-01');
+  const income    = parseInt(document.getElementById('cap-income').value)    || 0;
 
-  if (cost <= 0 || proceeds <= 0) {
-    alert('Please fill in buy cost and sell proceeds.');
-    return;
-  }
+  if (cost <= 0 || proceeds <= 0) { alert('Please fill in buy cost and sell proceeds.'); return; }
 
-  const gain = proceeds - cost;
-  const msPerDay = 86400000;
-  const holdingDays = Math.round((sellDate - buyDate) / msPerDay);
-  const isLongTerm = holdingDays > 365;
+  const gain        = proceeds - cost;
+  const holdingDays = Math.round((sellDate - buyDate) / 86400000);
+  const isLongTerm  = holdingDays > 365;
 
   let taxRate, taxOwed;
-  if (isLongTerm) {
-    taxRate = getLTCGRate(income);
-    taxOwed = Math.max(0, gain) * taxRate;
-  } else {
-    taxRate = 0.22;
-    taxOwed = Math.max(0, gain) * taxRate;
-  }
+  if (isLongTerm) { taxRate = getLTCGRate(income); taxOwed = Math.max(0, gain) * taxRate; }
+  else            { taxRate = 0.22;             taxOwed = Math.max(0, gain) * taxRate; }
 
-  const afterTax = gain - taxOwed;
+  const afterTax  = gain - taxOwed;
   const gainClass = gain >= 0 ? 'profit' : 'loss';
   const afterClass = afterTax >= 0 ? 'profit' : 'loss';
 
-  document.getElementById('cap-result').innerHTML = `
-    <h3>📊 Capital Gains Result</h3>
-    <div class="result-row"><span class="label">Cost Basis</span><span class="value">$${fmt(cost)}</span></div>
-    <div class="result-row"><span class="label">Proceeds</span><span class="value">$${fmt(proceeds)}</span></div>
-    <div class="result-row"><span class="label">Capital Gain / Loss</span><span class="value ${gainClass}">$${fmt(gain)}</span></div>
-    <div class="result-row"><span class="label">Holding Period</span><span class="value">${holdingDays} days (${isLongTerm ? 'Long-term ✅' : 'Short-term'})</span></div>
-    <div class="result-row"><span class="label">Tax Rate (${isLongTerm ? 'Long-term' : 'Short-term'})</span><span class="value tax">${(taxRate * 100).toFixed(0)}%</span></div>
-    <div class="result-row"><span class="label">Tax Owed</span><span class="value tax">$${fmt(taxOwed)}</span></div>
-    <div class="result-row" style="border-top:2px solid var(--accent);padding-top:10px;margin-top:4px;">
-      <span class="label" style="font-weight:700;">After-Tax Profit</span>
-      <span class="value ${afterClass}" style="font-size:16px;">$${fmt(afterTax)}</span>
-    </div>
-  `;
+  document.getElementById('cap-result').innerHTML =
+    '<h3>📊 Capital Gains Result</h3>'
+    + '<div class="result-row"><span class="label">Cost Basis</span><span class="value">$'+fmt(cost)+'</span></div>'
+    + '<div class="result-row"><span class="label">Proceeds</span><span class="value">$'+fmt(proceeds)+'</span></div>'
+    + '<div class="result-row"><span class="label">Capital Gain / Loss</span><span class="value '+gainClass+'">$'+fmt(gain)+'</span></div>'
+    + '<div class="result-row"><span class="label">Holding Period</span><span class="value">'+holdingDays+' days ('+(isLongTerm?'Long-term ✅':'Short-term')+')</span></div>'
+    + '<div class="result-row"><span class="label">Tax Rate ('+(isLongTerm?'Long-term':'Short-term')+')</span><span class="value tax">'+(taxRate*100).toFixed(0)+'%</span></div>'
+    + '<div class="result-row"><span class="label">Tax Owed</span><span class="value tax">$'+fmt(taxOwed)+'</span></div>'
+    + '<div class="result-row" style="border-top:2px solid var(--accent);padding-top:10px;margin-top:4px;"><span class="label" style="font-weight:700;">After-Tax Profit</span><span class="value '+afterClass+'" style="font-size:16px;">$'+fmt(afterTax)+'</span></div>';
+
   document.getElementById('cap-result').classList.add('show');
   document.getElementById('upgrade-cta').classList.add('show');
 }
 
+
 // ============================================================
-//  Utils
+//  UTILS
 // ============================================================
-function fmt(num, dec = 2) {
+function fmt(num, dec) {
+  dec = dec === undefined ? 2 : dec;
   if (num === undefined || isNaN(num)) return '0.00';
-  return Math.abs(num) >= 1e9 ? (num/1e9).toFixed(2)+'B'
-       : Math.abs(num) >= 1e6 ? (num/1e6).toFixed(2)+'M'
-       : Math.abs(num) >= 1e3 ? (num/1e3).toFixed(2)+'K'
+  return Math.abs(num) >= 1e9 ? (num/1e9).toFixed(dec)+'B'
+       : Math.abs(num) >= 1e6 ? (num/1e6).toFixed(dec)+'M'
+       : Math.abs(num) >= 1e3 ? (num/1e3).toFixed(dec)+'K'
        : num.toFixed(dec);
 }
+
+
+// ============================================================
+//  INIT
+// ============================================================
+checkAuth();
 </script>
 
 </body>
